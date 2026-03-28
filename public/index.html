@@ -460,6 +460,8 @@ body{
             <select id="fix-cat">
               <option value="maison">🏠 Maison</option>
               <option value="enfants">👧 Enfants</option>
+              <option value="voiture">🚗 Voiture</option>
+              <option value="nourriture">🛒 Nourriture</option>
               <option value="autre">📌 Autre</option>
             </select>
           </div>
@@ -652,19 +654,19 @@ body{
 const MF=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 const MS=['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
 const CCAT={maison:'#007aff',enfants:'#34c759',autre:'#8e8e93',perso:'#ff2d55',transport:'#32ade6',resto:'#ff9500',sport:'#30d158',vetements:'#ff2d55',sante:'#5e5ce6'};
-const CLAB={maison:'Maison',enfants:'Enfants',autre:'Autre',perso:'Personnel',transport:'Transport',resto:'Resto',sport:'Sport',vetements:'Vêtements',sante:'Santé'};
-const CICON={maison:'🏠',enfants:'👧',autre:'📌',perso:'👤',transport:'🚗',resto:'🍽️',sport:'⚽',vetements:'👕',sante:'💊'};
+const CLAB={maison:'Maison',enfants:'Enfants',voiture:'Voiture',nourriture:'Nourriture',autre:'Autre',perso:'Personnel',transport:'Transport',resto:'Resto',sport:'Sport',vetements:'Vêtements',sante:'Santé'};
+const CICON={maison:'🏠',enfants:'👧',voiture:'🚗',nourriture:'🛒',autre:'📌',perso:'👤',transport:'🚌',resto:'🍽️',sport:'⚽',vetements:'👕',sante:'💊'};
 
 const DEF_FIXED=[
   {id:1,name:'Crédit Crélan',amt:1864,cat:'maison'},{id:2,name:'Crédit Belfius',amt:384.15,cat:'maison'},
   {id:3,name:'Assurance SRD Jérôme',amt:60,cat:'maison'},{id:4,name:'Assurance SRD Marie',amt:42.17,cat:'maison'},
   {id:5,name:'Assurance habitation',amt:68.5,cat:'maison'},{id:6,name:'Précompte immo',amt:108.33,cat:'maison'},
-  {id:7,name:'Crédit voiture',amt:341,cat:'maison'},{id:8,name:'Taxes roulage',amt:29.17,cat:'maison'},
-  {id:9,name:'Assurance voiture',amt:162.17,cat:'maison'},{id:10,name:'Entretien voiture',amt:33.33,cat:'maison'},
-  {id:11,name:'Essence',amt:150,cat:'maison'},{id:12,name:'GSM Marie',amt:50,cat:'maison'},
+  {id:7,name:'Crédit voiture',amt:341,cat:'voiture'},{id:8,name:'Taxes roulage',amt:29.17,cat:'voiture'},
+  {id:9,name:'Assurance voiture',amt:162.17,cat:'voiture'},{id:10,name:'Entretien voiture',amt:33.33,cat:'voiture'},
+  {id:11,name:'Essence',amt:150,cat:'voiture'},{id:12,name:'GSM Marie',amt:50,cat:'maison'},
   {id:13,name:'Internet',amt:85,cat:'maison'},{id:14,name:'Électricité',amt:180,cat:'maison'},
   {id:15,name:'Eau',amt:70,cat:'maison'},{id:16,name:'Taxes déchets',amt:15,cat:'maison'},
-  {id:17,name:'Courses',amt:1000,cat:'maison'},{id:18,name:'Assurance Ethias',amt:21.45,cat:'maison'},
+  {id:17,name:'Courses',amt:1000,cat:'nourriture'},{id:18,name:'Assurance Ethias',amt:21.45,cat:'maison'},
   {id:19,name:'Danse Manu',amt:25,cat:'enfants'},{id:20,name:'Psy Léon',amt:20,cat:'enfants'},
   {id:21,name:'Psychomot Léon',amt:90,cat:'enfants'},{id:22,name:'Stages enfants',amt:50,cat:'enfants'},
   {id:23,name:'Camp Léon',amt:12.5,cat:'enfants'},{id:24,name:'Vêtements enfants',amt:130,cat:'enfants'},
