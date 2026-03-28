@@ -1212,11 +1212,11 @@ function calcAccounts() {
     else if(nameLow.includes('essence') || nameLow.includes('carburant')) {
       essenceItems.push(f);
     }
-    // Cat couple → Belfius
-    else if(f.cat === 'couple') {
+    // Nourriture + Enfants + Couple → Belfius
+    else if(f.cat === 'nourriture' || f.cat === 'enfants' || f.cat === 'couple') {
       belfiusItems.push(f);
     }
-    // Tout le reste : maison, voiture, nourriture, enfants, autre → Crélan
+    // Tout le reste : maison, voiture, autre → Crélan
     else {
       crelanItems.push(f);
     }
