@@ -403,10 +403,6 @@ body{
 .account-detail-toggle:active { opacity:.7; }
 .account-details { display:none; }
 .account-details.open { display:block; }
-.account-essence {
-  display:grid;grid-template-columns:1fr 1fr;
-  gap:10px;margin-bottom:10px;
-}
 </style>
 </head>
 <body>
@@ -503,7 +499,7 @@ body{
     <div class="sec-label">Virements mensuels par compte</div>
     <div id="account-crelan" class="account-card"></div>
     <div id="account-belfius" class="account-card" style="margin-top:0"></div>
-    <div class="account-essence" id="account-essence"></div>
+    <div id="account-essence"></div>
   </div>
   <div class="d-grid">
     <div>
@@ -1221,7 +1217,6 @@ function calcAccounts() {
 
   const tCrelan     = crelanItems.reduce((s,f)=>s+Number(f.amt),0);
   const tBelfiusBrut = belfiusItems.reduce((s,f)=>s+Number(f.amt),0);
-  const tEssence    = essenceItems.reduce((s,f)=>s+Number(f.amt),0);
 
   // Les chèques repas de Jérôme couvrent déjà une partie des courses → on les déduit du Belfius
   const cheqRepasJ = db.revenus
@@ -1233,7 +1228,6 @@ function calcAccounts() {
     crelan:  { items:crelanItems,  total:tCrelan,    pJ:tCrelan*c.rJ,    pM:tCrelan*c.rM    },
     belfius: { items:belfiusItems, total:tBelfius,   pJ:tBelfius*c.rJ,   pM:tBelfius*c.rM,
                brut:tBelfiusBrut, cheqRepas:cheqRepasJ },
-    essence: { items:essenceItems, total:tEssence,   pJ:tEssence*c.rJ,   pM:tEssence*c.rM   },
     ratioJ: c.rJ, ratioM: c.rM
   };
 }
@@ -1327,50 +1321,21 @@ function renderAccounts() {
     </div>
   `;
 
-  // ── ESSENCE ──
+  // ── TOTAL VIREMENTS ──
   document.getElementById('account-essence').innerHTML = `
-    <div class="account-card" style="margin-bottom:0">
-      <div class="account-header" style="border-bottom:none;padding-bottom:12px">
-        <div class="account-icon" style="background:#fef3c7">⛽</div>
-        <div>
-          <div class="account-title">Essence</div>
-          <div class="account-total">Géré séparément · <strong>${fI(ac.essence.total)}</strong>/mois</div>
-        </div>
-      </div>
-      <div class="account-parts" style="border-top:0.5px solid var(--sep2)">
-        <div class="account-part">
-          <div class="account-part-who">
-            <div class="account-part-ava" style="background:#dbeafe;color:#1d4ed8">JL</div>Jérôme
-          </div>
-          <div class="account-part-amt" style="color:#1d4ed8">${fI(ac.essence.pJ)}</div>
-        </div>
-        <div class="account-part">
-          <div class="account-part-who">
-            <div class="account-part-ava" style="background:#fce7f3;color:#be185d">MD</div>Marie
-          </div>
-          <div class="account-part-amt" style="color:#be185d">${fI(ac.essence.pM)}</div>
-        </div>
-      </div>
-    </div>
-    <div class="account-card" style="margin-bottom:0">
+    <div class="account-card" style="margin-bottom:0;grid-column:1/-1">
       <div class="account-header" style="border-bottom:none;padding:14px 16px">
         <div class="account-icon" style="background:#dcfce7">💰</div>
-        <div style="flex:1">
-          <div class="account-title">Total virements / mois</div>
-        </div>
+        <div style="flex:1"><div class="account-title">Total virements / mois</div></div>
       </div>
       <div class="account-parts" style="border-top:0.5px solid var(--sep2)">
         <div class="account-part">
-          <div class="account-part-who">
-            <div class="account-part-ava" style="background:#dbeafe;color:#1d4ed8">JL</div>Jérôme
-          </div>
+          <div class="account-part-who"><div class="account-part-ava" style="background:#dbeafe;color:#1d4ed8">JL</div>Jérôme</div>
           <div class="account-part-amt" style="color:var(--green)">${fI(ac.crelan.pJ + ac.belfius.pJ)}</div>
           <div style="font-size:11px;color:var(--text3)">Crélan + Belfius</div>
         </div>
         <div class="account-part">
-          <div class="account-part-who">
-            <div class="account-part-ava" style="background:#fce7f3;color:#be185d">MD</div>Marie
-          </div>
+          <div class="account-part-who"><div class="account-part-ava" style="background:#fce7f3;color:#be185d">MD</div>Marie</div>
           <div class="account-part-amt" style="color:var(--green)">${fI(ac.crelan.pM + ac.belfius.pM)}</div>
           <div style="font-size:11px;color:var(--text3)">Crélan + Belfius</div>
         </div>
