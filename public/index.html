@@ -408,25 +408,43 @@ const DEF_GOALS=[
   {id:106,name:'City trip',target:350,saved:0,cat:'vacances'},
 ];
 
-const STORAGE_KEY = 'budget-famille-v1';
+const SUPABASE_URL = 'https://naeljmzkfhatebsedinj.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5hZWxqbXprZmhhdGVic2VkaW5qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2NTcyNjQsImV4cCI6MjA5MDIzMzI2NH0.X8EVfDaij3YGZzCSrn25-wnbSw3wk1_kpVnS00Xuhag';
 let db = { fixed: DEF_FIXED, revenus: DEF_REV, personal: {}, goals: DEF_GOALS, nextId: 200 };
 let curY=2026, curM=2, viewYear=2026, activeTab='global';
 const charts={};
 let saveTimer=null;
 
-function loadDB(){
+async function loadDB(){
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if(raw){ const loaded=JSON.parse(raw); db={...db,...loaded}; }
-  } catch(e){}
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/budget?id=eq.famille&select=data`, {
+      headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}` }
+    });
+    const rows = await res.json();
+    if(rows.length && rows[0].data && Object.keys(rows[0].data).length > 0){
+      db = { ...db, ...rows[0].data };
+    }
+  } catch(e){ console.warn('Supabase load error', e); }
+  render();
 }
 function saveDB(){
   document.getElementById('save-toast').style.display='block';
   clearTimeout(saveTimer);
-  saveTimer=setTimeout(()=>{
-    try{ localStorage.setItem(STORAGE_KEY,JSON.stringify(db)); }catch(e){}
+  saveTimer=setTimeout(async ()=>{
+    try{
+      await fetch(`${SUPABASE_URL}/rest/v1/budget?id=eq.famille`, {
+        method: 'PATCH',
+        headers: {
+          'apikey': SUPABASE_ANON,
+          'Authorization': `Bearer ${SUPABASE_ANON}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({ data: db, updated_at: new Date().toISOString() })
+      });
+    }catch(e){ console.warn('Supabase save error', e); }
     document.getElementById('save-toast').style.display='none';
-  },600);
+  },800);
 }
 
 function mkey(y,m){ return y+'-'+String(m).padStart(2,'0') }
@@ -786,7 +804,6 @@ function render(){
 }
 
 loadDB();
-render();
 </script>
 </body>
 </html>
