@@ -357,6 +357,56 @@ body{
   transition:none;
   left:0; top:0;
 }
+
+/* ── ACCOUNT CARDS ── */
+.account-card {
+  background:var(--card);border-radius:var(--r-xl);
+  overflow:hidden;margin-bottom:10px;
+}
+.account-header {
+  display:flex;align-items:center;gap:12px;
+  padding:14px 16px 10px;border-bottom:0.5px solid var(--sep2);
+}
+.account-icon {
+  width:36px;height:36px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;flex-shrink:0;
+}
+.account-title { font-size:15px;font-weight:700;color:var(--text); }
+.account-total { font-size:13px;color:var(--text3);margin-top:2px; }
+.account-parts {
+  display:grid;grid-template-columns:1fr 1fr;
+}
+.account-part {
+  padding:12px 16px;display:flex;flex-direction:column;gap:3px;
+}
+.account-part:first-child { border-right:0.5px solid var(--sep2); }
+.account-part-who {
+  display:flex;align-items:center;gap:6px;
+  font-size:11px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.4px;color:var(--text3);
+}
+.account-part-ava {
+  width:18px;height:18px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:9px;font-weight:800;
+}
+.account-part-amt {
+  font-size:20px;font-weight:800;letter-spacing:-.5px;line-height:1.1;
+}
+.account-detail-toggle {
+  width:100%;padding:10px 16px;
+  background:none;border:none;border-top:0.5px solid var(--sep2);
+  color:var(--blue);font-size:13px;font-weight:500;
+  cursor:pointer;text-align:center;
+}
+.account-detail-toggle:active { opacity:.7; }
+.account-details { display:none; }
+.account-details.open { display:block; }
+.account-essence {
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:10px;margin-bottom:10px;
+}
 </style>
 </head>
 <body>
@@ -448,6 +498,13 @@ body{
 <!-- ACCUEIL -->
 <div id="tab-global" class="pg on">
   <div class="mg" id="g-metrics"></div>
+
+  <div id="accounts-section" style="margin-bottom:24px;display:none">
+    <div class="sec-label">Virements mensuels par compte</div>
+    <div id="account-crelan" class="account-card"></div>
+    <div id="account-belfius" class="account-card" style="margin-top:0"></div>
+    <div class="account-essence" id="account-essence"></div>
+  </div>
   <div class="d-grid">
     <div>
       <div class="sec-label">Charges fixes mensuelles</div>
@@ -985,7 +1042,7 @@ function addFixed(){
   document.getElementById('fix-name').value='';document.getElementById('fix-amt').value='';saveDB();render();
 }
 function delFixed(id){db.fixed=db.fixed.filter(f=>f.id!==id);saveDB();render();}
-function editFixed(id,val){const f=db.fixed.find(x=>x.id===id);if(f){f.amt=parseFloat(val)||0;saveDB();renderGlobalMetrics();renderCatBars();renderRevList();renderPersoTab('jerome');renderPersoTab('marie');}}
+function editFixed(id,val){const f=db.fixed.find(x=>x.id===id);if(f){f.amt=parseFloat(val)||0;saveDB();renderGlobalMetrics();renderCatBars();renderRevList();renderAccounts();renderPersoTab('jerome');renderPersoTab('marie');}}
 function addPerso(who){
   const p=who==='jerome'?'j':'m',desc=document.getElementById(p+'-desc').value.trim(),amt=parseFloat(document.getElementById(p+'-amt').value)||0,cat=document.getElementById(p+'-cat').value;
   if(!desc||amt<=0)return;const k=cKey();
@@ -1133,8 +1190,193 @@ function addPersoSummary(who, pfx) {
   renderGlobalMetrics();
 }
 
+
+/* ── RÉPARTITION PAR COMPTE ── */
+function calcAccounts() {
+  const c = contribs();
+  // Règles d'affectation par compte :
+  // CRÉLAN : maison (hors crédit Belfius) + voiture (hors essence) + nourriture + enfants
+  // BELFIUS : crédit Belfius + dépenses de couple (cat:'couple')
+  // ESSENCE : poste nommé 'essence' (cat voiture)
+
+  const crelanItems = [], belfiusItems = [], essenceItems = [];
+
+  db.fixed.forEach(f => {
+    const nameLow = f.name.toLowerCase();
+    const amt = Number(f.amt);
+    // Crédit Belfius → Belfius
+    if(nameLow.includes('belfius')) {
+      belfiusItems.push(f);
+    }
+    // Essence → séparé
+    else if(nameLow.includes('essence') || nameLow.includes('carburant')) {
+      essenceItems.push(f);
+    }
+    // Cat couple → Belfius
+    else if(f.cat === 'couple') {
+      belfiusItems.push(f);
+    }
+    // Tout le reste : maison, voiture, nourriture, enfants, autre → Crélan
+    else {
+      crelanItems.push(f);
+    }
+  });
+
+  const tCrelan  = crelanItems.reduce((s,f)=>s+Number(f.amt),0);
+  const tBelfius = belfiusItems.reduce((s,f)=>s+Number(f.amt),0);
+  const tEssence = essenceItems.reduce((s,f)=>s+Number(f.amt),0);
+
+  return {
+    crelan:  { items:crelanItems,  total:tCrelan,  pJ:tCrelan*c.rJ,   pM:tCrelan*c.rM   },
+    belfius: { items:belfiusItems, total:tBelfius, pJ:tBelfius*c.rJ,  pM:tBelfius*c.rM  },
+    essence: { items:essenceItems, total:tEssence, pJ:tEssence*c.rJ,  pM:tEssence*c.rM  },
+    ratioJ: c.rJ, ratioM: c.rM
+  };
+}
+
+function accountDetailsHTML(items) {
+  if(!items.length) return '<div style="padding:10px 16px;font-size:13px;color:var(--text3)">Aucun poste</div>';
+  return items.map(f => `
+    <div class="lrow" style="padding:9px 16px">
+      <div class="lrow-icon" style="background:${CCAT[f.cat]||'#888'}22;width:24px;height:24px;font-size:12px">${CICON[f.cat]||'📌'}</div>
+      <div class="lrow-main"><div class="lrow-name" style="font-size:13px">${f.name}</div></div>
+      <div class="lrow-val" style="font-size:13px">${fI(f.amt)}</div>
+    </div>`).join('');
+}
+
+function toggleAccountDetail(id) {
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.classList.toggle('open');
+  const btn = el.previousElementSibling;
+  if(btn) btn.textContent = el.classList.contains('open') ? '▲ Masquer le détail' : '▼ Voir le détail';
+}
+
+function renderAccounts() {
+  const ac = calcAccounts();
+  const section = document.getElementById('accounts-section');
+  if(section) section.style.display = '';
+
+  // ── CRÉLAN ──
+  document.getElementById('account-crelan').innerHTML = `
+    <div class="account-header">
+      <div class="account-icon" style="background:#dbeafe">🏦</div>
+      <div>
+        <div class="account-title">Compte Crélan</div>
+        <div class="account-total">Total mensuel : <strong>${fI(ac.crelan.total)}</strong></div>
+      </div>
+    </div>
+    <div class="account-parts">
+      <div class="account-part">
+        <div class="account-part-who">
+          <div class="account-part-ava" style="background:#dbeafe;color:#1d4ed8">JL</div>
+          Jérôme
+        </div>
+        <div class="account-part-amt" style="color:#1d4ed8">${fI(ac.crelan.pJ)}</div>
+        <div style="font-size:11px;color:var(--text3)">${(ac.ratioJ*100).toFixed(0)}% des charges</div>
+      </div>
+      <div class="account-part">
+        <div class="account-part-who">
+          <div class="account-part-ava" style="background:#fce7f3;color:#be185d">MD</div>
+          Marie
+        </div>
+        <div class="account-part-amt" style="color:#be185d">${fI(ac.crelan.pM)}</div>
+        <div style="font-size:11px;color:var(--text3)">${(ac.ratioM*100).toFixed(0)}% des charges</div>
+      </div>
+    </div>
+    <button class="account-detail-toggle" onclick="toggleAccountDetail('detail-crelan')">▼ Voir le détail</button>
+    <div class="account-details" id="detail-crelan">
+      ${accountDetailsHTML(ac.crelan.items)}
+    </div>
+  `;
+
+  // ── BELFIUS ──
+  document.getElementById('account-belfius').innerHTML = `
+    <div class="account-header">
+      <div class="account-icon" style="background:#fee2e2">🏦</div>
+      <div>
+        <div class="account-title">Compte Belfius</div>
+        <div class="account-total">Total mensuel : <strong>${fI(ac.belfius.total)}</strong></div>
+      </div>
+    </div>
+    <div class="account-parts">
+      <div class="account-part">
+        <div class="account-part-who">
+          <div class="account-part-ava" style="background:#dbeafe;color:#1d4ed8">JL</div>
+          Jérôme
+        </div>
+        <div class="account-part-amt" style="color:#1d4ed8">${fI(ac.belfius.pJ)}</div>
+        <div style="font-size:11px;color:var(--text3)">${(ac.ratioJ*100).toFixed(0)}% des charges</div>
+      </div>
+      <div class="account-part">
+        <div class="account-part-who">
+          <div class="account-part-ava" style="background:#fce7f3;color:#be185d">MD</div>
+          Marie
+        </div>
+        <div class="account-part-amt" style="color:#be185d">${fI(ac.belfius.pM)}</div>
+        <div style="font-size:11px;color:var(--text3)">${(ac.ratioM*100).toFixed(0)}% des charges</div>
+      </div>
+    </div>
+    <button class="account-detail-toggle" onclick="toggleAccountDetail('detail-belfius')">▼ Voir le détail</button>
+    <div class="account-details" id="detail-belfius">
+      ${accountDetailsHTML(ac.belfius.items)}
+    </div>
+  `;
+
+  // ── ESSENCE ──
+  document.getElementById('account-essence').innerHTML = `
+    <div class="account-card" style="margin-bottom:0">
+      <div class="account-header" style="border-bottom:none;padding-bottom:12px">
+        <div class="account-icon" style="background:#fef3c7">⛽</div>
+        <div>
+          <div class="account-title">Essence</div>
+          <div class="account-total">Géré séparément · <strong>${fI(ac.essence.total)}</strong>/mois</div>
+        </div>
+      </div>
+      <div class="account-parts" style="border-top:0.5px solid var(--sep2)">
+        <div class="account-part">
+          <div class="account-part-who">
+            <div class="account-part-ava" style="background:#dbeafe;color:#1d4ed8">JL</div>Jérôme
+          </div>
+          <div class="account-part-amt" style="color:#1d4ed8">${fI(ac.essence.pJ)}</div>
+        </div>
+        <div class="account-part">
+          <div class="account-part-who">
+            <div class="account-part-ava" style="background:#fce7f3;color:#be185d">MD</div>Marie
+          </div>
+          <div class="account-part-amt" style="color:#be185d">${fI(ac.essence.pM)}</div>
+        </div>
+      </div>
+    </div>
+    <div class="account-card" style="margin-bottom:0">
+      <div class="account-header" style="border-bottom:none;padding:14px 16px">
+        <div class="account-icon" style="background:#dcfce7">💰</div>
+        <div style="flex:1">
+          <div class="account-title">Total virements / mois</div>
+        </div>
+      </div>
+      <div class="account-parts" style="border-top:0.5px solid var(--sep2)">
+        <div class="account-part">
+          <div class="account-part-who">
+            <div class="account-part-ava" style="background:#dbeafe;color:#1d4ed8">JL</div>Jérôme
+          </div>
+          <div class="account-part-amt" style="color:var(--green)">${fI(ac.crelan.pJ + ac.belfius.pJ)}</div>
+          <div style="font-size:11px;color:var(--text3)">Crélan + Belfius</div>
+        </div>
+        <div class="account-part">
+          <div class="account-part-who">
+            <div class="account-part-ava" style="background:#fce7f3;color:#be185d">MD</div>Marie
+          </div>
+          <div class="account-part-amt" style="color:var(--green)">${fI(ac.crelan.pM + ac.belfius.pM)}</div>
+          <div style="font-size:11px;color:var(--text3)">Crélan + Belfius</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 function render(){
-  renderMonthLabel();renderGlobalMetrics();renderFixed();renderCatBars();renderRevList();renderPersoTab('jerome');renderPersoTab('marie');
+  renderMonthLabel();renderGlobalMetrics();renderFixed();renderCatBars();renderRevList();renderAccounts();renderPersoTab('jerome');renderPersoTab('marie');
   renderPersoSummary('jerome');renderPersoSummary('marie');
   if(activeTab==='annuel')renderAnnual();else if(activeTab==='objectifs')renderObjectifs();else if(activeTab==='graphiques')renderGraphiques();
 }
