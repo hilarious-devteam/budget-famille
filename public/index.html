@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Budget Famille</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root {
+  --bg: #ffffff;
+  --bg2: #f5f5f3;
+  --bg3: #eeede8;
+  --text: #1a1a1a;
+  --text2: #6b6b6b;
+  --text3: #9b9b9b;
+  --border: rgba(0,0,0,0.1);
+  --border2: rgba(0,0,0,0.18);
+  --radius: 8px;
+  --radius-lg: 12px;
+  --green: #1D9E75;
+  --red: #D85A30;
+  --amber: #BA7517;
+  --blue: #378ADD;
+  --purple: #7F77DD;
+  --pink: #D4537E;
+  --gray: #888780;
+  --teal: #5DCAA5;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1a1a1a;
+    --bg2: #242424;
+    --bg3: #2e2e2e;
+    --text: #f0f0f0;
+    --text2: #a0a0a0;
+    --text3: #6a6a6a;
+    --border: rgba(255,255,255,0.1);
+    --border2: rgba(255,255,255,0.18);
+  }
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg3); color: var(--text); min-height: 100vh; }
+.shell { max-width: 960px; margin: 0 auto; padding: 1.5rem 1rem; }
+.topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
+.topbar h1 { font-size: 20px; font-weight: 600; }
+.topbar p { font-size: 12px; color: var(--text2); margin-top: 2px; }
+.month-nav { display: flex; align-items: center; gap: 8px; }
+.month-nav button { background: var(--bg); border: 0.5px solid var(--border2); border-radius: var(--radius); padding: 5px 12px; cursor: pointer; font-size: 14px; color: var(--text); }
+.month-nav button:hover { background: var(--bg2); }
+.month-lbl { font-size: 13px; font-weight: 600; color: var(--text); min-width: 130px; text-align: center; }
+.year-nav { display: flex; align-items: center; gap: 8px; }
+.year-nav button { background: var(--bg); border: 0.5px solid var(--border2); border-radius: var(--radius); padding: 5px 12px; cursor: pointer; font-size: 14px; color: var(--text); }
+.year-lbl { font-size: 14px; font-weight: 600; color: var(--text); min-width: 50px; text-align: center; }
+
+.nav { display: flex; gap: 2px; margin-bottom: 1.2rem; background: var(--bg2); border-radius: var(--radius-lg); padding: 4px; }
+.nav-btn { flex: 1; padding: 8px 6px; font-size: 12px; cursor: pointer; border-radius: var(--radius); background: none; border: none; color: var(--text2); font-weight: 400; transition: all .15s; }
+.nav-btn.active { background: var(--bg); color: var(--text); font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+.nav-btn:hover:not(.active) { background: var(--bg3); }
+
+.page { display: none; }
+.page.active { display: block; }
+
+.metrics { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; margin-bottom: 1rem; }
+.metrics3 { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; margin-bottom: 1rem; }
+.metrics5 { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 10px; margin-bottom: 1rem; }
+.metric { background: var(--bg); border-radius: var(--radius-lg); padding: 12px 14px; border: 0.5px solid var(--border); }
+.mlabel { font-size: 11px; color: var(--text2); margin-bottom: 5px; text-transform: uppercase; letter-spacing: .5px; }
+.mval { font-size: 18px; font-weight: 600; color: var(--text); }
+.mval.ok { color: var(--green); }
+.mval.ko { color: var(--red); }
+.mval.warn { color: var(--amber); }
+.msub { font-size: 11px; color: var(--text3); margin-top: 3px; }
+
+.card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1rem 1.2rem; margin-bottom: 1rem; }
+.ctitle { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 12px; }
+.row2 { display: grid; grid-template-columns: minmax(0,1.4fr) minmax(0,.6fr); gap: 12px; }
+.row2eq { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 12px; }
+
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { font-size: 11px; color: var(--text2); text-align: left; padding: 5px 8px; font-weight: 500; border-bottom: 0.5px solid var(--border); }
+th.r { text-align: right; }
+td { padding: 8px 8px; border-bottom: 0.5px solid var(--border); color: var(--text); vertical-align: middle; }
+td.r { text-align: right; font-variant-numeric: tabular-nums; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--bg2); }
+.tbl-sm th { font-size: 10px; padding: 4px 6px; }
+.tbl-sm td { padding: 6px 6px; font-size: 12px; }
+
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 5px; vertical-align: middle; }
+.badge { font-size: 10px; padding: 2px 7px; border-radius: 99px; font-weight: 500; white-space: nowrap; }
+.del-btn { background: none; border: none; color: var(--text3); cursor: pointer; font-size: 14px; padding: 2px 6px; border-radius: 4px; }
+.del-btn:hover { color: var(--red); background: var(--bg2); }
+.edit-val { width: 85px; font-size: 12px; text-align: right; padding: 4px 6px; border-radius: var(--radius); border: 0.5px solid var(--border2); background: var(--bg2); color: var(--text); }
+.edit-val:focus { outline: none; border-color: var(--blue); }
+.edit-wide { width: 100px; font-size: 12px; text-align: right; padding: 4px 6px; border-radius: var(--radius); border: 0.5px solid var(--border2); background: var(--bg2); color: var(--text); }
+
+.add-row { display: grid; grid-template-columns: 1fr 85px 110px auto; gap: 6px; align-items: center; margin-top: 10px; padding-top: 10px; border-top: 0.5px solid var(--border); }
+.add-goal { display: grid; grid-template-columns: 1fr 100px 90px auto; gap: 6px; align-items: center; margin-top: 10px; padding-top: 10px; border-top: 0.5px solid var(--border); }
+.perso-add { display: grid; grid-template-columns: 1fr 85px 110px auto; gap: 6px; align-items: center; margin-top: 10px; padding-top: 10px; border-top: 0.5px solid var(--border); }
+.add-row input, .add-row select, .add-goal input, .add-goal select, .perso-add input, .perso-add select {
+  font-size: 13px; padding: 6px 8px; border-radius: var(--radius); border: 0.5px solid var(--border2);
+  background: var(--bg2); color: var(--text); outline: none; width: 100%;
+}
+.add-row input:focus, .add-goal input:focus, .perso-add input:focus { border-color: var(--blue); }
+.btn { font-size: 12px; padding: 6px 14px; cursor: pointer; border-radius: var(--radius); border: 0.5px solid var(--border2); background: var(--bg); color: var(--text); white-space: nowrap; font-weight: 500; }
+.btn:hover { background: var(--bg2); }
+.btn-primary { background: var(--text); color: var(--bg); border-color: var(--text); }
+.btn-primary:hover { opacity: .85; }
+
+.avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; flex-shrink: 0; }
+
+.dispo-box { border-radius: var(--radius-lg); padding: 1rem 1.2rem; margin-bottom: 1rem; border: 0.5px solid transparent; }
+.dispo-big { font-size: 28px; font-weight: 700; margin: 4px 0; }
+.progress-bar { height: 6px; background: var(--bg3); border-radius: 3px; margin-top: 8px; }
+.progress-inner { height: 6px; border-radius: 3px; transition: width .4s ease; }
+
+.cat-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.cat-name { font-size: 13px; color: var(--text); flex: 1; }
+.bar-wrap { height: 4px; background: var(--bg3); border-radius: 2px; flex: 1; max-width: 80px; }
+.bar-inner { height: 4px; border-radius: 2px; }
+.cat-amt { font-size: 13px; font-weight: 600; color: var(--text); min-width: 65px; text-align: right; }
+
+.goal-row { margin-bottom: 14px; }
+.goal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+.goal-name { font-size: 13px; color: var(--text); font-weight: 500; }
+.goal-nums { display: flex; align-items: center; gap: 8px; }
+.goal-pct { font-size: 11px; color: var(--text3); margin-top: 3px; display: flex; justify-content: space-between; }
+
+.save-toast { position: fixed; bottom: 16px; right: 16px; background: var(--bg); border: 0.5px solid var(--border2); border-radius: var(--radius-lg); padding: 8px 16px; font-size: 12px; color: var(--text2); display: none; box-shadow: 0 4px 16px rgba(0,0,0,.1); z-index: 999; }
+
+@media (max-width: 600px) {
+  .metrics { grid-template-columns: repeat(2, 1fr); }
+  .metrics5 { grid-template-columns: repeat(2, 1fr); }
+  .row2, .row2eq { grid-template-columns: 1fr; }
+  .add-row, .perso-add { grid-template-columns: 1fr 1fr; }
+  .add-row select, .perso-add select { grid-column: 1; }
+  .add-row .btn, .perso-add .btn { grid-column: 2; }
+  .nav-btn { font-size: 11px; padding: 7px 3px; }
+}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="topbar">
+    <div>
+      <h1>Budget famille</h1>
+      <p>Jérôme &amp; Marie</p>
+    </div>
+    <div id="nav-controls">
+      <div class="month-nav" id="month-controls">
+        <button onclick="changeMonth(-1)">←</button>
+        <div class="month-lbl" id="month-lbl"></div>
+        <button onclick="changeMonth(1)">→</button>
+      </div>
+      <div class="year-nav" id="year-controls" style="display:none">
+        <button onclick="changeYear(-1)">←</button>
+        <div class="year-lbl" id="year-lbl"></div>
+        <button onclick="changeYear(1)">→</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="nav">
+    <button class="nav-btn active" onclick="goTab('global',this)">Vue globale</button>
+    <button class="nav-btn" onclick="goTab('jerome',this)">Jérôme</button>
+    <button class="nav-btn" onclick="goTab('marie',this)">Marie</button>
+    <button class="nav-btn" onclick="goTab('objectifs',this)">Objectifs</button>
+    <button class="nav-btn" onclick="goTab('annuel',this)">Annuel</button>
+    <button class="nav-btn" onclick="goTab('graphiques',this)">Graphiques</button>
+  </div>
+
+  <!-- GLOBAL -->
+  <div id="tab-global" class="page active">
+    <div class="metrics" id="g-metrics"></div>
+    <div class="row2">
+      <div class="card">
+        <div class="ctitle">Charges fixes mensuelles</div>
+        <table>
+          <thead><tr><th>Poste</th><th>Catégorie</th><th class="r">Mensuel</th><th class="r">Annuel</th><th></th></tr></thead>
+          <tbody id="fixed-tbody"></tbody>
+        </table>
+        <div class="add-row">
+          <input type="text" id="fix-name" placeholder="Nouveau poste...">
+          <input type="number" id="fix-amt" placeholder="€/mois" min="0" step="0.01">
+          <select id="fix-cat">
+            <option value="maison">Maison</option>
+            <option value="enfants">Enfants</option>
+            <option value="autre">Autre</option>
+          </select>
+          <button class="btn btn-primary" onclick="addFixed()">+ Ajouter</button>
+        </div>
+      </div>
+      <div>
+        <div class="card">
+          <div class="ctitle">Répartition</div>
+          <div id="cat-bars"></div>
+        </div>
+        <div class="card">
+          <div class="ctitle">Revenus &amp; contribution</div>
+          <table><tbody id="rev-tbody"></tbody></table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JEROME -->
+  <div id="tab-jerome" class="page">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem">
+      <div class="avatar" style="background:#dbeafe;color:#1e40af">JL</div>
+      <div>
+        <div style="font-size:15px;font-weight:600">Jérôme — <span id="jerome-month-sub"></span></div>
+        <div style="font-size:12px;color:var(--text2)">Dépenses personnelles</div>
+      </div>
+    </div>
+    <div id="j-dispo-box"></div>
+    <div class="metrics" id="j-metrics"></div>
+    <div class="card">
+      <table>
+        <thead><tr><th>Description</th><th>Catégorie</th><th class="r">Montant</th><th></th></tr></thead>
+        <tbody id="jerome-tbody"></tbody>
+      </table>
+      <div class="perso-add">
+        <input type="text" id="j-desc" placeholder="Description...">
+        <input type="number" id="j-amt" placeholder="€" min="0" step="0.01">
+        <select id="j-cat">
+          <option value="perso">Personnel</option><option value="transport">Transport</option>
+          <option value="resto">Resto/Sorties</option><option value="sport">Sport/Loisirs</option>
+          <option value="vetements">Vêtements</option><option value="sante">Santé</option><option value="autre">Autre</option>
+        </select>
+        <button class="btn btn-primary" onclick="addPerso('jerome')">+ Ajouter</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MARIE -->
+  <div id="tab-marie" class="page">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem">
+      <div class="avatar" style="background:#fce7f3;color:#9d174d">MD</div>
+      <div>
+        <div style="font-size:15px;font-weight:600">Marie — <span id="marie-month-sub"></span></div>
+        <div style="font-size:12px;color:var(--text2)">Dépenses personnelles</div>
+      </div>
+    </div>
+    <div id="m-dispo-box"></div>
+    <div class="metrics" id="m-metrics"></div>
+    <div class="card">
+      <table>
+        <thead><tr><th>Description</th><th>Catégorie</th><th class="r">Montant</th><th></th></tr></thead>
+        <tbody id="marie-tbody"></tbody>
+      </table>
+      <div class="perso-add">
+        <input type="text" id="m-desc" placeholder="Description...">
+        <input type="number" id="m-amt" placeholder="€" min="0" step="0.01">
+        <select id="m-cat">
+          <option value="perso">Personnel</option><option value="transport">Transport</option>
+          <option value="resto">Resto/Sorties</option><option value="sport">Sport/Loisirs</option>
+          <option value="vetements">Vêtements</option><option value="sante">Santé</option><option value="autre">Autre</option>
+        </select>
+        <button class="btn btn-primary" onclick="addPerso('marie')">+ Ajouter</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- OBJECTIFS -->
+  <div id="tab-objectifs" class="page">
+    <div class="row2eq">
+      <div>
+        <div class="card">
+          <div class="ctitle">Épargne — objectifs annuels</div>
+          <div id="goals-epargne"></div>
+          <div class="add-goal">
+            <input type="text" id="ge-name" placeholder="Ex: épargne étude Léon">
+            <input type="number" id="ge-target" placeholder="Objectif €">
+            <input type="number" id="ge-saved" placeholder="Épargné €">
+            <button class="btn btn-primary" onclick="addGoal('epargne')">+ Ajouter</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="ctitle">Vacances — objectifs annuels</div>
+          <div id="goals-vacances"></div>
+          <div class="add-goal">
+            <input type="text" id="gv-name" placeholder="Ex: vacances été">
+            <input type="number" id="gv-target" placeholder="Objectif €">
+            <input type="number" id="gv-saved" placeholder="Mis de côté €">
+            <button class="btn btn-primary" onclick="addGoal('vacances')">+ Ajouter</button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="card">
+          <div class="ctitle">Résumé objectifs</div>
+          <div id="goals-summary"></div>
+        </div>
+        <div class="card">
+          <div class="ctitle">Progression globale</div>
+          <div style="position:relative;height:200px"><canvas id="goals-chart"></canvas></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ANNUEL -->
+  <div id="tab-annuel" class="page">
+    <div class="metrics5" id="annual-metrics"></div>
+    <div class="card">
+      <div class="ctitle">Revenus vs dépenses — mois par mois</div>
+      <div style="position:relative;height:210px;margin-bottom:10px"><canvas id="annual-bar-chart"></canvas></div>
+      <div style="display:flex;gap:16px;font-size:11px;color:var(--text2)">
+        <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:var(--green);display:inline-block"></span>Revenus</span>
+        <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:var(--blue);display:inline-block"></span>Charges fixes</span>
+        <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:var(--pink);display:inline-block"></span>Dépenses perso</span>
+      </div>
+    </div>
+    <div class="row2eq">
+      <div class="card">
+        <div class="ctitle">Solde cumulé</div>
+        <div style="position:relative;height:190px"><canvas id="annual-cumul-chart"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="ctitle">Répartition charges fixes</div>
+        <div style="position:relative;height:190px"><canvas id="annual-donut-chart"></canvas></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ctitle">Tableau détaillé</div>
+      <div style="overflow-x:auto">
+        <table class="tbl-sm" style="min-width:680px">
+          <thead><tr>
+            <th>Mois</th><th class="r">Revenus</th><th class="r">Fixes</th>
+            <th class="r">Perso J.</th><th class="r">Perso M.</th>
+            <th class="r">Total dep.</th><th class="r">Solde</th><th class="r">Cumulé</th>
+          </tr></thead>
+          <tbody id="annual-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- GRAPHIQUES -->
+  <div id="tab-graphiques" class="page">
+    <div class="row2eq" style="margin-bottom:0">
+      <div class="card">
+        <div class="ctitle">Revenus vs dépenses — 6 mois glissants</div>
+        <div style="display:flex;gap:10px;margin-bottom:8px;font-size:11px;color:var(--text2)">
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:var(--green);display:inline-block"></span>Revenus</span>
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:var(--red);display:inline-block"></span>Dépenses</span>
+        </div>
+        <div style="position:relative;height:190px"><canvas id="revdep-chart"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="ctitle">Solde mensuel — 6 mois glissants</div>
+        <div style="position:relative;height:190px"><canvas id="solde-chart"></canvas></div>
+      </div>
+    </div>
+    <div class="row2eq">
+      <div class="card">
+        <div class="ctitle">Dépenses perso — Jérôme vs Marie</div>
+        <div style="display:flex;gap:10px;margin-bottom:8px;font-size:11px;color:var(--text2)">
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:var(--blue);display:inline-block"></span>Jérôme</span>
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:var(--pink);display:inline-block"></span>Marie</span>
+        </div>
+        <div style="position:relative;height:180px"><canvas id="perso-chart"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="ctitle">Répartition charges fixes</div>
+        <div style="position:relative;height:180px"><canvas id="donut-chart"></canvas></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="save-toast" id="save-toast">Sauvegarde...</div>
+
+<script>
+const MF=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+const MS=['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
+const CC={maison:'#378ADD',enfants:'#639922',autre:'#888780',perso:'#D4537E',transport:'#5DCAA5',resto:'#D85A30',sport:'#1D9E75',vetements:'#D4537E',sante:'#7F77DD'};
+const CL={maison:'Maison',enfants:'Enfants',autre:'Autre',perso:'Personnel',transport:'Transport',resto:'Resto/Sorties',sport:'Sport/Loisirs',vetements:'Vêtements',sante:'Santé'};
+
+const DEF_FIXED=[
+  {id:1,name:'Crédit Crélan',amt:1864,cat:'maison'},{id:2,name:'Crédit Belfius',amt:384.15,cat:'maison'},
+  {id:3,name:'Assurance SRD Jérôme',amt:60,cat:'maison'},{id:4,name:'Assurance SRD Marie',amt:42.17,cat:'maison'},
+  {id:5,name:'Assurance habitation',amt:68.5,cat:'maison'},{id:6,name:'Précompte immo',amt:108.33,cat:'maison'},
+  {id:7,name:'Crédit voiture',amt:341,cat:'maison'},{id:8,name:'Taxes roulage',amt:29.17,cat:'maison'},
+  {id:9,name:'Assurance voiture',amt:162.17,cat:'maison'},{id:10,name:'Entretien voiture',amt:33.33,cat:'maison'},
+  {id:11,name:'Essence',amt:150,cat:'maison'},{id:12,name:'GSM Marie',amt:50,cat:'maison'},
+  {id:13,name:'Internet',amt:85,cat:'maison'},{id:14,name:'Électricité',amt:180,cat:'maison'},
+  {id:15,name:'Eau',amt:70,cat:'maison'},{id:16,name:'Taxes déchets',amt:15,cat:'maison'},
+  {id:17,name:'Courses',amt:1000,cat:'maison'},{id:18,name:'Assurance Ethias',amt:21.45,cat:'maison'},
+  {id:19,name:'Danse Manu',amt:25,cat:'enfants'},{id:20,name:'Psy Léon',amt:20,cat:'enfants'},
+  {id:21,name:'Psychomot Léon',amt:90,cat:'enfants'},{id:22,name:'Stages enfants',amt:50,cat:'enfants'},
+  {id:23,name:'Camp Léon',amt:12.5,cat:'enfants'},{id:24,name:'Vêtements enfants',amt:130,cat:'enfants'},
+  {id:25,name:'Mutuelles',amt:23,cat:'enfants'},
+];
+const DEF_REV=[
+  {name:'Salaire Jérôme',amt:3400,who:'jerome'},
+  {name:'Salaire Marie',amt:3050,who:'marie'},
+  {name:'Chèques repas Jérôme',amt:200,who:'jerome'},
+  {name:'Chèques repas Marie',amt:100,who:'marie'},
+  {name:'Allocations Famiwal',amt:332,who:'commun'},
+];
+const DEF_GOALS=[
+  {id:101,name:'Épargne étude Léon',target:38000,saved:0,cat:'epargne'},
+  {id:102,name:'Épargne étude Manu',target:35923,saved:0,cat:'epargne'},
+  {id:103,name:'Épargne générale',target:1800,saved:0,cat:'epargne'},
+  {id:104,name:'Vacances été',target:2000,saved:0,cat:'vacances'},
+  {id:105,name:'Vacances hiver',target:2000,saved:0,cat:'vacances'},
+  {id:106,name:'City trip',target:350,saved:0,cat:'vacances'},
+];
+
+const STORAGE_KEY = 'budget-famille-v1';
+let db = { fixed: DEF_FIXED, revenus: DEF_REV, personal: {}, goals: DEF_GOALS, nextId: 200 };
+let curY=2026, curM=2, viewYear=2026, activeTab='global';
+const charts={};
+let saveTimer=null;
+
+function loadDB(){
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){ const loaded=JSON.parse(raw); db={...db,...loaded}; }
+  } catch(e){}
+}
+function saveDB(){
+  document.getElementById('save-toast').style.display='block';
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(()=>{
+    try{ localStorage.setItem(STORAGE_KEY,JSON.stringify(db)); }catch(e){}
+    document.getElementById('save-toast').style.display='none';
+  },600);
+}
+
+function mkey(y,m){ return y+'-'+String(m).padStart(2,'0') }
+function curKey(){ return mkey(curY,curM) }
+function fmt(n){ return Number(n).toLocaleString('fr-BE',{minimumFractionDigits:2,maximumFractionDigits:2})+' €' }
+function fmtI(n){ return Math.round(n).toLocaleString('fr-BE')+' €' }
+
+function totalFixed(){ return db.fixed.reduce((s,f)=>s+Number(f.amt),0) }
+function totalRevs(){ return db.revenus.reduce((s,r)=>s+Number(r.amt),0) }
+function getPerso(who,key){ return (db.personal[who]&&db.personal[who][key])||[] }
+function persoTotal(who,key){ return getPerso(who,key).reduce((s,x)=>s+Number(x.amt),0) }
+
+function contributions(){
+  const sJ=db.revenus.filter(r=>r.who==='jerome').reduce((s,r)=>s+Number(r.amt),0);
+  const sM=db.revenus.filter(r=>r.who==='marie').reduce((s,r)=>s+Number(r.amt),0);
+  const total=sJ+sM;
+  const ratioJ=total>0?sJ/total:.5;
+  const ratioM=total>0?sM/total:.5;
+  const fix=totalFixed();
+  const sJTotal=db.revenus.filter(r=>r.who==='jerome'||r.who==='commun').reduce((s,r)=>s+Number(r.amt),0);
+  const sMTotal=db.revenus.filter(r=>r.who==='marie'||r.who==='commun').reduce((s,r)=>s+Number(r.amt),0);
+  return { ratioJ,ratioM,sJ,sM,sJTotal,sMTotal,partJ:fix*ratioJ,partM:fix*ratioM,dispoJ:sJTotal-fix*ratioJ,dispoM:sMTotal-fix*ratioM };
+}
+
+function getLast6(){
+  const res=[];
+  for(let i=5;i>=0;i--){ let m=curM-i,y=curY; while(m<0){m+=12;y--;} res.push({y,m,key:mkey(y,m),label:MS[m]}); }
+  return res;
+}
+function getYearMonths(y){ return Array.from({length:12},(_,m)=>({y,m,key:mkey(y,m),label:MS[m],labelFull:MF[m]})) }
+
+function changeMonth(d){ curM+=d; if(curM<0){curM=11;curY--;} if(curM>11){curM=0;curY++;} render(); }
+function changeYear(d){ viewYear+=d; renderAnnual(); }
+
+function goTab(name,btn){
+  activeTab=name;
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  document.getElementById('month-controls').style.display=name==='annuel'?'none':'flex';
+  document.getElementById('year-controls').style.display=name==='annuel'?'flex':'none';
+  if(name==='annuel') renderAnnual();
+  else if(name==='objectifs') renderObjectifs();
+  else if(name==='graphiques') renderGraphiques();
+}
+
+function destroyChart(id){ if(charts[id]){charts[id].destroy();delete charts[id]} }
+
+function renderMonthLabel(){
+  const lbl=MF[curM]+' '+curY;
+  document.getElementById('month-lbl').textContent=lbl;
+  document.getElementById('year-lbl').textContent=viewYear;
+  document.getElementById('jerome-month-sub').textContent=lbl;
+  document.getElementById('marie-month-sub').textContent=lbl;
+}
+
+function renderGlobalMetrics(){
+  const rev=totalRevs(),fix=totalFixed();
+  const jP=persoTotal('jerome',curKey()),mP=persoTotal('marie',curKey());
+  const total=fix+jP+mP,solde=rev-total;
+  document.getElementById('g-metrics').innerHTML=`
+    <div class="metric"><div class="mlabel">Revenus</div><div class="mval ok">${fmtI(rev)}</div></div>
+    <div class="metric"><div class="mlabel">Charges fixes</div><div class="mval">${fmtI(fix)}</div></div>
+    <div class="metric"><div class="mlabel">Dépenses perso</div><div class="mval warn">${fmtI(jP+mP)}</div></div>
+    <div class="metric"><div class="mlabel">Solde libre</div><div class="mval ${solde>=0?'ok':'ko'}">${fmtI(solde)}</div></div>
+  `;
+}
+
+function renderFixed(){
+  document.getElementById('fixed-tbody').innerHTML=db.fixed.map(f=>`
+    <tr>
+      <td><span class="dot" style="background:${CC[f.cat]||'#888'}"></span>${f.name}</td>
+      <td><span class="badge" style="background:${CC[f.cat]||'#888'}22;color:${CC[f.cat]||'#888'}">${CL[f.cat]||f.cat}</span></td>
+      <td class="r"><input class="edit-val" type="number" value="${Number(f.amt).toFixed(2)}" onchange="editFixed(${f.id},this.value)"></td>
+      <td class="r" style="color:var(--text2)">${fmtI(f.amt*12)}</td>
+      <td><button class="del-btn" onclick="delFixed(${f.id})">✕</button></td>
+    </tr>
+  `).join('');
+}
+
+function renderCatBars(){
+  const cats={};db.fixed.forEach(f=>{cats[f.cat]=(cats[f.cat]||0)+Number(f.amt)});
+  const total=Object.values(cats).reduce((s,v)=>s+v,0);
+  document.getElementById('cat-bars').innerHTML=Object.entries(cats).sort((a,b)=>b[1]-a[1]).map(([cat,val])=>`
+    <div class="cat-row">
+      <div class="cat-name"><span class="dot" style="background:${CC[cat]||'#888'}"></span>${CL[cat]||cat}</div>
+      <div class="bar-wrap"><div class="bar-inner" style="width:${(val/total*100).toFixed(1)}%;background:${CC[cat]||'#888'}"></div></div>
+      <div class="cat-amt">${fmtI(val)}</div>
+    </div>
+  `).join('');
+}
+
+function renderRevenus(){
+  const c=contributions();
+  document.getElementById('rev-tbody').innerHTML=
+    db.revenus.map(r=>`<tr><td>${r.name}</td><td class="r">${fmtI(r.amt)}</td></tr>`).join('')
+    +`<tr style="border-top:1px solid var(--border)"><td style="font-size:11px;color:var(--text2);padding-top:8px">Part charges fixes</td><td></td></tr>
+    <tr><td style="padding-left:14px;font-size:12px">Jérôme (${(c.ratioJ*100).toFixed(0)}%)</td><td class="r" style="color:var(--red)">&minus;${fmtI(c.partJ)}</td></tr>
+    <tr><td style="padding-left:14px;font-size:12px">Marie (${(c.ratioM*100).toFixed(0)}%)</td><td class="r" style="color:var(--red)">&minus;${fmtI(c.partM)}</td></tr>`;
+}
+
+function renderDispoBox(who){
+  const c=contributions();
+  const spent=persoTotal(who,curKey());
+  const dispo=who==='jerome'?c.dispoJ:c.dispoM;
+  const reste=dispo-spent;
+  const pct=Math.min(100,dispo>0?(spent/dispo*100):0);
+  const [color,bg,txt]=reste>400?['#1D9E75','#ecfdf5','#065f46']:reste>0?['#BA7517','#fffbeb','#78350f']:['#D85A30','#fff7ed','#9a3412'];
+  document.getElementById((who==='jerome'?'j':'m')+'-dispo-box').innerHTML=`
+    <div class="dispo-box" style="background:${bg};border-color:${color}44">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px">
+        <div>
+          <div style="font-size:12px;color:${txt};opacity:.8;margin-bottom:2px">Disponible ce mois (après charges fixes)</div>
+          <div class="dispo-big" style="color:${txt}">${fmtI(dispo)}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:12px;color:${txt};opacity:.8;margin-bottom:2px">Dépensé</div>
+          <div style="font-size:20px;font-weight:600;color:${txt}">${fmtI(spent)}</div>
+          <div style="font-size:15px;font-weight:600;color:${color};margin-top:4px">Reste : ${fmtI(reste)}</div>
+        </div>
+      </div>
+      <div class="progress-bar" style="background:${color}22"><div class="progress-inner" style="width:${pct.toFixed(1)}%;background:${color}"></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:${txt};opacity:.75;margin-top:4px">
+        <span>${pct.toFixed(0)}% du disponible utilisé</span>
+        <span>Salaire net perso : ${fmtI(who==='jerome'?c.sJTotal:c.sMTotal)} — part fixes : ${fmtI(who==='jerome'?c.partJ:c.partM)}</span>
+      </div>
+    </div>
+  `;
+}
+
+function renderPersoTab(who){
+  renderDispoBox(who);
+  const p=who==='jerome'?'j':'m';
+  const arr=getPerso(who,curKey());
+  const total=arr.reduce((s,x)=>s+Number(x.amt),0);
+  const c=contributions();
+  const dispo=who==='jerome'?c.dispoJ:c.dispoM;
+  const pct=dispo>0?(total/dispo*100).toFixed(0):0;
+  const catTotals={};arr.forEach(x=>{catTotals[x.cat]=(catTotals[x.cat]||0)+Number(x.amt)});
+  const topCat=Object.entries(catTotals).sort((a,b)=>b[1]-a[1])[0];
+  document.getElementById(p+'-metrics').innerHTML=`
+    <div class="metric"><div class="mlabel">Dépensé</div><div class="mval ${total<dispo?'ok':'ko'}">${fmtI(total)}</div></div>
+    <div class="metric"><div class="mlabel">Postes</div><div class="mval">${arr.length}</div></div>
+    <div class="metric"><div class="mlabel">% du dispo</div><div class="mval ${pct<80?'ok':'warn'}">${pct}%</div></div>
+    <div class="metric"><div class="mlabel">Top catégorie</div><div class="mval" style="font-size:13px">${topCat?CL[topCat[0]]:'—'}</div></div>
+  `;
+  document.getElementById(who+'-tbody').innerHTML=arr.length
+    ?arr.map((x,i)=>`
+        <tr>
+          <td>${x.desc}</td>
+          <td><span class="badge" style="background:${CC[x.cat]||'#888'}22;color:${CC[x.cat]||'#888'}">${CL[x.cat]||x.cat}</span></td>
+          <td class="r">${fmt(x.amt)}</td>
+          <td><button class="del-btn" onclick="delPerso('${who}',${i})">✕</button></td>
+        </tr>`).join('')
+      +`<tr style="font-weight:600"><td colspan="2">Total</td><td class="r">${fmt(total)}</td><td></td></tr>`
+    :`<tr><td colspan="4" style="text-align:center;padding:20px;font-size:13px;color:var(--text2)">Aucune dépense ce mois-ci</td></tr>`;
+}
+
+function renderObjectifs(){
+  ['epargne','vacances'].forEach(type=>{
+    const goals=db.goals.filter(g=>g.cat===type);
+    const col=type==='epargne'?'#7F77DD':'#BA7517';
+    document.getElementById('goals-'+type).innerHTML=goals.length?goals.map(g=>{
+      const pct=g.target>0?Math.min(100,(g.saved/g.target*100)):0;
+      return `<div class="goal-row">
+        <div class="goal-header">
+          <div class="goal-name">${g.name}</div>
+          <div class="goal-nums">
+            <input class="edit-wide" type="number" value="${Number(g.saved).toFixed(0)}" title="Montant épargné" onchange="editGoalSaved(${g.id},this.value)">
+            <span style="font-size:12px;color:var(--text2)">/ ${fmtI(g.target)}</span>
+            <button class="del-btn" onclick="delGoal(${g.id})">✕</button>
+          </div>
+        </div>
+        <div class="progress-bar"><div class="progress-inner" style="width:${pct.toFixed(1)}%;background:${col}"></div></div>
+        <div class="goal-pct"><span>${pct.toFixed(0)}% atteint · mensuel théorique : ${fmtI(g.target/12)}</span><span>${fmtI(g.target-g.saved)} restant</span></div>
+      </div>`;
+    }).join(''):`<div style="font-size:13px;color:var(--text2);padding:10px 0">Aucun objectif défini</div>`;
+  });
+
+  const totalEp=db.goals.filter(g=>g.cat==='epargne').reduce((s,g)=>s+Number(g.target),0);
+  const savedEp=db.goals.filter(g=>g.cat==='epargne').reduce((s,g)=>s+Number(g.saved),0);
+  const totalVac=db.goals.filter(g=>g.cat==='vacances').reduce((s,g)=>s+Number(g.target),0);
+  const savedVac=db.goals.filter(g=>g.cat==='vacances').reduce((s,g)=>s+Number(g.saved),0);
+  const totalAll=totalEp+totalVac,savedAll=savedEp+savedVac;
+  document.getElementById('goals-summary').innerHTML=`
+    <div class="metric" style="margin-bottom:8px"><div class="mlabel">Objectifs épargne</div><div class="mval" style="color:#7F77DD">${fmtI(totalEp)}</div><div class="msub">Épargné : ${fmtI(savedEp)}</div></div>
+    <div class="metric" style="margin-bottom:8px"><div class="mlabel">Objectifs vacances</div><div class="mval" style="color:#BA7517">${fmtI(totalVac)}</div><div class="msub">Mis de côté : ${fmtI(savedVac)}</div></div>
+    <div class="metric" style="margin-bottom:8px"><div class="mlabel">Total général</div><div class="mval">${fmtI(totalAll)}</div><div class="msub">${fmtI(savedAll)} · ${totalAll>0?(savedAll/totalAll*100).toFixed(0):0}% atteint</div></div>
+    <div style="margin-top:12px;padding-top:12px;border-top:0.5px solid var(--border);font-size:12px;color:var(--text2)">
+      Effort mensuel pour tout atteindre en 1 an :<br>
+      <span style="font-weight:600;font-size:15px;color:var(--text)">${fmtI((totalAll-savedAll)/12)} / mois</span>
+    </div>
+  `;
+  destroyChart('goals-chart');
+  const labels=db.goals.map(g=>g.name.length>16?g.name.slice(0,15)+'…':g.name);
+  const colors=db.goals.map(g=>g.cat==='epargne'?'#7F77DD':'#BA7517');
+  charts['goals-chart']=new Chart(document.getElementById('goals-chart').getContext('2d'),{type:'bar',
+    data:{labels,datasets:[
+      {label:'Objectif',data:db.goals.map(g=>Math.round(g.target)),backgroundColor:colors.map(c=>c+'33'),borderColor:colors,borderWidth:1,borderRadius:3},
+      {label:'Épargné',data:db.goals.map(g=>Math.round(g.saved)),backgroundColor:colors.map(c=>c+'bb'),borderColor:colors,borderWidth:1,borderRadius:3},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{font:{size:11},boxWidth:10,padding:8}}},
+      scales:{x:{grid:{display:false},ticks:{font:{size:10},autoSkip:false,maxRotation:25}},y:{ticks:{callback:v=>Math.round(v/1000)+'k€',font:{size:11}},grid:{color:'rgba(128,128,128,.08)'}}}}
+  });
+}
+
+function renderAnnual(){
+  document.getElementById('year-lbl').textContent=viewYear;
+  const months=getYearMonths(viewYear);
+  const rev=totalRevs(),fix=totalFixed();
+  const today=new Date();
+  let rows=[],cumul=0,tRev=0,tFix=0,tJ=0,tM=0;
+  const bFix=[],bPerso=[],bRev=[],bLabels=[],cData=[];
+  months.forEach(({m,key,labelFull,label})=>{
+    const jP=persoTotal('jerome',key),mP=persoTotal('marie',key);
+    const dep=fix+jP+mP,solde=rev-dep;
+    cumul+=solde;tRev+=rev;tFix+=fix;tJ+=jP;tM+=mP;
+    bLabels.push(label);bRev.push(Math.round(rev));bFix.push(Math.round(fix));bPerso.push(Math.round(jP+mP));cData.push(Math.round(cumul));
+    const isCur=(viewYear===curY&&m===curM);
+    const fut=(viewYear>today.getFullYear()||(viewYear===today.getFullYear()&&m>today.getMonth()));
+    rows.push(`<tr style="${isCur?'background:var(--bg2)':''}">
+      <td>${labelFull}${isCur?' ◀':''}</td>
+      <td class="r" style="color:var(--green)">${fut?'—':fmtI(rev)}</td>
+      <td class="r">${fut?'—':fmtI(fix)}</td>
+      <td class="r">${fut||jP===0?'—':fmtI(jP)}</td>
+      <td class="r">${fut||mP===0?'—':fmtI(mP)}</td>
+      <td class="r">${fut?'—':fmtI(dep)}</td>
+      <td class="r" style="color:${solde>=0?'var(--green)':'var(--red)'}">${fut?'—':fmtI(solde)}</td>
+      <td class="r" style="color:${cumul>=0?'var(--green)':'var(--red)'}">${fut?'—':fmtI(cumul)}</td>
+    </tr>`);
+  });
+  const tDep=tFix+tJ+tM;
+  rows.push(`<tr style="font-weight:600;background:var(--bg2)">
+    <td>Total</td><td class="r" style="color:var(--green)">${fmtI(tRev)}</td><td class="r">${fmtI(tFix)}</td>
+    <td class="r">${fmtI(tJ)}</td><td class="r">${fmtI(tM)}</td><td class="r">${fmtI(tDep)}</td>
+    <td class="r" style="color:${(tRev-tDep)>=0?'var(--green)':'var(--red)'}">${fmtI(tRev-tDep)}</td>
+    <td class="r" style="color:${cumul>=0?'var(--green)':'var(--red)'}">${fmtI(cumul)}</td>
+  </tr>`);
+  document.getElementById('annual-tbody').innerHTML=rows.join('');
+  const tauxEp=(tRev-tDep)/tRev*100;
+  document.getElementById('annual-metrics').innerHTML=`
+    <div class="metric"><div class="mlabel">Revenus annuels</div><div class="mval ok">${fmtI(tRev)}</div><div class="msub">${fmtI(rev)}/mois</div></div>
+    <div class="metric"><div class="mlabel">Charges fixes</div><div class="mval">${fmtI(tFix)}</div><div class="msub">${fmtI(fix)}/mois</div></div>
+    <div class="metric"><div class="mlabel">Perso total</div><div class="mval warn">${fmtI(tJ+tM)}</div><div class="msub">J: ${fmtI(tJ)} · M: ${fmtI(tM)}</div></div>
+    <div class="metric"><div class="mlabel">Solde annuel</div><div class="mval ${cumul>=0?'ok':'ko'}">${fmtI(cumul)}</div><div class="msub">${fmtI(Math.round(cumul/12))}/mois moy.</div></div>
+    <div class="metric"><div class="mlabel">Taux d'épargne</div><div class="mval ${tauxEp>=10?'ok':'warn'}">${tauxEp.toFixed(1)}%</div></div>
+  `;
+  destroyChart('annual-bar-chart');
+  charts['annual-bar-chart']=new Chart(document.getElementById('annual-bar-chart').getContext('2d'),{type:'bar',
+    data:{labels:bLabels,datasets:[
+      {label:'Revenus',data:bRev,backgroundColor:'#1D9E7555',borderColor:'#1D9E75',borderWidth:1,borderRadius:3},
+      {label:'Fixes',data:bFix,backgroundColor:'#378ADD88',borderColor:'#378ADD',borderWidth:1,borderRadius:3},
+      {label:'Perso',data:bPerso,backgroundColor:'#D4537E88',borderColor:'#D4537E',borderWidth:1,borderRadius:3}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{grid:{display:false},ticks:{font:{size:11},autoSkip:false,maxRotation:0}},y:{ticks:{callback:v=>Math.round(v/1000)+'k€',font:{size:11}},grid:{color:'rgba(128,128,128,.08)'}}}}
+  });
+  destroyChart('annual-cumul-chart');
+  charts['annual-cumul-chart']=new Chart(document.getElementById('annual-cumul-chart').getContext('2d'),{type:'line',
+    data:{labels:bLabels,datasets:[{data:cData,borderColor:'#1D9E75',backgroundColor:'#1D9E7522',fill:true,tension:.35,pointRadius:4,borderWidth:2,pointBackgroundColor:'#1D9E75'}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{grid:{display:false},ticks:{font:{size:11},autoSkip:false,maxRotation:0}},y:{ticks:{callback:v=>fmtI(v),font:{size:11}},grid:{color:'rgba(128,128,128,.08)'}}}}
+  });
+  const cats={};db.fixed.forEach(f=>{cats[f.cat]=(cats[f.cat]||0)+Number(f.amt)});
+  destroyChart('annual-donut-chart');
+  charts['annual-donut-chart']=new Chart(document.getElementById('annual-donut-chart').getContext('2d'),{type:'doughnut',
+    data:{labels:Object.keys(cats).map(c=>CL[c]||c),datasets:[{data:Object.values(cats),backgroundColor:Object.keys(cats).map(c=>CC[c]||'#888'),borderWidth:2,borderColor:'transparent'}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:11},padding:8,boxWidth:10}}}}
+  });
+}
+
+function renderGraphiques(){
+  const months=getLast6();
+  const rev=totalRevs(),fix=totalFixed();
+  const labels=months.map(m=>m.label);
+  destroyChart('revdep-chart');
+  charts['revdep-chart']=new Chart(document.getElementById('revdep-chart').getContext('2d'),{type:'bar',
+    data:{labels,datasets:[
+      {data:months.map(()=>Math.round(rev)),backgroundColor:'#1D9E7555',borderColor:'#1D9E75',borderWidth:1,borderRadius:3},
+      {data:months.map(m=>Math.round(fix+persoTotal('jerome',m.key)+persoTotal('marie',m.key))),backgroundColor:'#D85A3055',borderColor:'#D85A30',borderWidth:1,borderRadius:3}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{grid:{display:false},ticks:{font:{size:11},autoSkip:false}},y:{ticks:{callback:v=>Math.round(v/1000)+'k€',font:{size:11}},grid:{color:'rgba(128,128,128,.08)'}}}}
+  });
+  destroyChart('solde-chart');
+  charts['solde-chart']=new Chart(document.getElementById('solde-chart').getContext('2d'),{type:'line',
+    data:{labels,datasets:[{data:months.map(m=>Math.round(rev-fix-persoTotal('jerome',m.key)-persoTotal('marie',m.key))),borderColor:'#1D9E75',backgroundColor:'#1D9E7522',fill:true,tension:.35,pointRadius:4,borderWidth:2,pointBackgroundColor:'#1D9E75'}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{grid:{display:false},ticks:{font:{size:11},autoSkip:false}},y:{ticks:{callback:v=>Math.round(v)+'€',font:{size:11}},grid:{color:'rgba(128,128,128,.08)'}}}}
+  });
+  destroyChart('perso-chart');
+  charts['perso-chart']=new Chart(document.getElementById('perso-chart').getContext('2d'),{type:'bar',
+    data:{labels,datasets:[
+      {label:'Jérôme',data:months.map(m=>Math.round(persoTotal('jerome',m.key))),backgroundColor:'#378ADD88',borderColor:'#378ADD',borderWidth:1,borderRadius:3},
+      {label:'Marie',data:months.map(m=>Math.round(persoTotal('marie',m.key))),backgroundColor:'#D4537E88',borderColor:'#D4537E',borderWidth:1,borderRadius:3}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{grid:{display:false},ticks:{font:{size:11},autoSkip:false}},y:{ticks:{callback:v=>Math.round(v)+'€',font:{size:11}},grid:{color:'rgba(128,128,128,.08)'}}}}
+  });
+  const cats={};db.fixed.forEach(f=>{cats[f.cat]=(cats[f.cat]||0)+Number(f.amt)});
+  destroyChart('donut-chart');
+  charts['donut-chart']=new Chart(document.getElementById('donut-chart').getContext('2d'),{type:'doughnut',
+    data:{labels:Object.keys(cats).map(c=>CL[c]||c),datasets:[{data:Object.values(cats),backgroundColor:Object.keys(cats).map(c=>CC[c]||'#888'),borderWidth:2,borderColor:'transparent'}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:11},padding:8,boxWidth:10}}}}
+  });
+}
+
+function addFixed(){
+  const name=document.getElementById('fix-name').value.trim();
+  const amt=parseFloat(document.getElementById('fix-amt').value)||0;
+  const cat=document.getElementById('fix-cat').value;
+  if(!name||amt<=0)return;
+  db.fixed.push({id:db.nextId++,name,amt,cat});
+  document.getElementById('fix-name').value='';document.getElementById('fix-amt').value='';
+  saveDB();render();
+}
+function delFixed(id){ db.fixed=db.fixed.filter(f=>f.id!==id); saveDB();render(); }
+function editFixed(id,val){ const f=db.fixed.find(x=>x.id===id); if(f){f.amt=parseFloat(val)||0;saveDB();renderGlobalMetrics();renderCatBars();renderRevenus();renderPersoTab('jerome');renderPersoTab('marie');} }
+
+function addPerso(who){
+  const p=who==='jerome'?'j':'m';
+  const desc=document.getElementById(p+'-desc').value.trim();
+  const amt=parseFloat(document.getElementById(p+'-amt').value)||0;
+  const cat=document.getElementById(p+'-cat').value;
+  if(!desc||amt<=0)return;
+  const k=curKey();
+  if(!db.personal[who])db.personal[who]={};
+  if(!db.personal[who][k])db.personal[who][k]=[];
+  db.personal[who][k].push({desc,amt,cat});
+  document.getElementById(p+'-desc').value='';document.getElementById(p+'-amt').value='';
+  saveDB();renderPersoTab(who);renderGlobalMetrics();
+}
+function delPerso(who,idx){
+  const k=curKey();
+  if(db.personal[who]&&db.personal[who][k]){ db.personal[who][k].splice(idx,1); saveDB();renderPersoTab(who);renderGlobalMetrics(); }
+}
+function addGoal(cat){
+  const prefix=cat==='epargne'?'ge':'gv';
+  const name=document.getElementById(prefix+'-name').value.trim();
+  const target=parseFloat(document.getElementById(prefix+'-target').value)||0;
+  const saved=parseFloat(document.getElementById(prefix+'-saved').value)||0;
+  if(!name||target<=0)return;
+  db.goals.push({id:db.nextId++,name,target,saved,cat});
+  document.getElementById(prefix+'-name').value='';document.getElementById(prefix+'-target').value='';document.getElementById(prefix+'-saved').value='';
+  saveDB();renderObjectifs();
+}
+function delGoal(id){ db.goals=db.goals.filter(g=>g.id!==id); saveDB();renderObjectifs(); }
+function editGoalSaved(id,val){ const g=db.goals.find(x=>x.id===id); if(g){g.saved=parseFloat(val)||0;saveDB();renderObjectifs();} }
+
+function render(){
+  renderMonthLabel();renderGlobalMetrics();renderFixed();renderCatBars();renderRevenus();
+  renderPersoTab('jerome');renderPersoTab('marie');
+  if(activeTab==='annuel') renderAnnual();
+  else if(activeTab==='objectifs') renderObjectifs();
+  else if(activeTab==='graphiques') renderGraphiques();
+}
+
+loadDB();
+render();
+</script>
+</body>
+</html>
