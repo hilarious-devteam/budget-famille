@@ -327,6 +327,36 @@ body{
 .ps-family-left{display:flex;align-items:center;gap:14px;}
 .ps-family-icon{width:50px;height:50px;border-radius:50%;background:var(--fill2);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
 .ps-footer{font-size:12px;color:var(--text3);text-align:center;margin-top:24px;max-width:280px;line-height:1.5;}
+
+/* ── DRAG & DROP ── */
+.drag-handle {
+  width:28px; height:44px;
+  display:flex; align-items:center; justify-content:center;
+  color:var(--text3); font-size:16px; cursor:grab;
+  flex-shrink:0; touch-action:none; user-select:none;
+  -webkit-user-select:none;
+  letter-spacing:1px; line-height:1;
+}
+.drag-handle:active { cursor:grabbing; }
+.lrow.dragging {
+  opacity:0; pointer-events:none;
+}
+.lrow.drag-over-top {
+  box-shadow: 0 -2px 0 var(--blue);
+}
+.lrow.drag-over-bot {
+  box-shadow: 0 2px 0 var(--blue);
+}
+.drag-ghost {
+  position:fixed; z-index:9999; pointer-events:none;
+  background:var(--card);
+  border-radius:var(--r-lg);
+  box-shadow:0 8px 32px rgba(0,0,0,.18);
+  opacity:.95;
+  transform:scale(1.02);
+  transition:none;
+  left:0; top:0;
+}
 </style>
 </head>
 <body>
@@ -741,7 +771,8 @@ function renderGlobalMetrics(){
 
 function renderFixed(){
   document.getElementById('fixed-list').innerHTML=db.fixed.map(f=>`
-    <div class="lrow">
+    <div class="lrow" data-id="${f.id}" data-list="fixed">
+      <div class="drag-handle" title="Déplacer">⠿</div>
       <div class="lrow-icon" style="background:${CCAT[f.cat]||'#888'}22">${CICON[f.cat]||'📌'}</div>
       <div class="lrow-main"><div class="lrow-name">${f.name}</div></div>
       <div class="lrow-right">
@@ -749,6 +780,7 @@ function renderFixed(){
         <button class="del-btn" onclick="delFixed(${f.id})">✕</button>
       </div>
     </div>`).join('');
+  initDragList(document.getElementById('fixed-list'), 'fixed');
 }
 
 function renderCatBars(){
@@ -1034,12 +1066,13 @@ function renderPersoSummary(who) {
     <div class="lcard">
       <div id="${pfx}-list">
         ${arr.length
-          ? arr.map((x,i) => `
-            <div class="lrow">
+          ? `<div id="${pfx}-drag-list">`+arr.map((x,i) => `
+            <div class="lrow" data-idx="${i}" data-list="perso-${who}">
+              <div class="drag-handle" title="Déplacer">⠿</div>
               <div class="lrow-icon" style="background:${CCAT[x.cat]||'#888'}22">${CICON[x.cat]||'📌'}</div>
               <div class="lrow-main"><div class="lrow-name">${x.desc}</div><div class="lrow-sub">${CLAB[x.cat]||x.cat}</div></div>
               <div class="lrow-right"><div class="lrow-val">${fmt(x.amt)}</div><button class="del-btn" onclick="delPerso('${who}',${i})">✕</button></div>
-            </div>`).join('')
+            </div>`).join('')+`</div>`
             + `<div class="lrow" style="background:var(--fill2)"><div class="lrow-main"><div class="lrow-name" style="font-weight:700">Total</div></div><div class="lrow-right"><div class="lrow-val" style="font-weight:700">${fmt(total)}</div></div></div>`
           : '<div class="lrow"><div class="lrow-main" style="text-align:center;padding:8px 0;color:var(--text3)">Aucune dépense ce mois-ci</div></div>'
         }
@@ -1227,6 +1260,138 @@ if(currentProfile) {
   // Afficher l'écran profil — ne pas construire les tabs encore
   buildTabs(); // tabs par défaut pour "all"
 }
+
+/* ── DRAG & DROP ENGINE ── */
+function initDragList(container, listType) {
+  if(!container) return;
+  let dragSrc = null;
+  let ghost = null;
+  let ghostOffX = 0, ghostOffY = 0;
+  let lastOver = null;
+  let lastPos = null; // 'top' | 'bot'
+
+  function getRows() { return Array.from(container.querySelectorAll('.lrow')); }
+
+  function createGhost(row, x, y) {
+    const rect = row.getBoundingClientRect();
+    const g = row.cloneNode(true);
+    g.className = 'drag-ghost';
+    g.style.width = rect.width + 'px';
+    g.style.height = rect.height + 'px';
+    g.style.transform = `translate(${rect.left}px, ${rect.top}px) scale(1.02)`;
+    document.body.appendChild(g);
+    ghostOffX = x - rect.left;
+    ghostOffY = y - rect.top;
+    return g;
+  }
+
+  function moveGhost(x, y) {
+    if(!ghost) return;
+    ghost.style.transform = `translate(${x - ghostOffX}px, ${y - ghostOffY}px) scale(1.02)`;
+  }
+
+  function clearHighlights() {
+    getRows().forEach(r => {
+      r.classList.remove('drag-over-top', 'drag-over-bot');
+    });
+  }
+
+  function getRowAt(x, y) {
+    const rows = getRows().filter(r => r !== dragSrc);
+    for(const row of rows) {
+      const rect = row.getBoundingClientRect();
+      if(y >= rect.top && y <= rect.bottom && x >= rect.left && x <= rect.right) {
+        return { row, pos: y < rect.top + rect.height/2 ? 'top' : 'bot' };
+      }
+    }
+    return null;
+  }
+
+  function onPointerDown(e) {
+    const handle = e.target.closest('.drag-handle');
+    if(!handle) return;
+    const row = handle.closest('.lrow');
+    if(!row) return;
+    e.preventDefault();
+    dragSrc = row;
+    row.classList.add('dragging');
+    ghost = createGhost(row, e.clientX, e.clientY);
+    document.addEventListener('pointermove', onPointerMove, {passive:false});
+    document.addEventListener('pointerup', onPointerUp);
+    // Vibration tactile
+    if(navigator.vibrate) navigator.vibrate(10);
+  }
+
+  function onPointerMove(e) {
+    if(!dragSrc) return;
+    e.preventDefault();
+    moveGhost(e.clientX, e.clientY);
+    clearHighlights();
+    const hit = getRowAt(e.clientX, e.clientY);
+    if(hit) {
+      lastOver = hit.row;
+      lastPos = hit.pos;
+      hit.row.classList.add(hit.pos === 'top' ? 'drag-over-top' : 'drag-over-bot');
+    } else {
+      lastOver = null;
+      lastPos = null;
+    }
+  }
+
+  function onPointerUp(e) {
+    if(!dragSrc) return;
+    document.removeEventListener('pointermove', onPointerMove);
+    document.removeEventListener('pointerup', onPointerUp);
+    if(ghost) { ghost.remove(); ghost = null; }
+    dragSrc.classList.remove('dragging');
+    clearHighlights();
+
+    if(lastOver && lastOver !== dragSrc) {
+      // Réordonner les données
+      reorderList(listType, dragSrc, lastOver, lastPos);
+    }
+    dragSrc = null;
+    lastOver = null;
+  }
+
+  container.addEventListener('pointerdown', onPointerDown);
+}
+
+function reorderList(listType, srcEl, targetEl, pos) {
+  if(listType === 'fixed') {
+    const srcId = parseInt(srcEl.dataset.id);
+    const tgtId = parseInt(targetEl.dataset.id);
+    const srcIdx = db.fixed.findIndex(f => f.id === srcId);
+    const tgtIdx = db.fixed.findIndex(f => f.id === tgtId);
+    if(srcIdx === -1 || tgtIdx === -1) return;
+    const [item] = db.fixed.splice(srcIdx, 1);
+    const newIdx = db.fixed.findIndex(f => f.id === tgtId);
+    db.fixed.splice(pos === 'top' ? newIdx : newIdx + 1, 0, item);
+    saveDB();
+    renderFixed();
+    renderCatBars();
+    renderGlobalMetrics();
+  } else if(listType.startsWith('perso-')) {
+    const who = listType.replace('perso-', '');
+    const k = cKey();
+    const arr = db.personal[who]?.[k];
+    if(!arr) return;
+    const srcIdx = parseInt(srcEl.dataset.idx);
+    const tgtIdx = parseInt(targetEl.dataset.idx);
+    if(isNaN(srcIdx) || isNaN(tgtIdx)) return;
+    const [item] = arr.splice(srcIdx, 1);
+    const newIdx = arr.findIndex((_, i) => i === (srcIdx < tgtIdx ? tgtIdx - 1 : tgtIdx));
+    const insertAt = pos === 'top'
+      ? (srcIdx < tgtIdx ? tgtIdx - 1 : tgtIdx)
+      : (srcIdx < tgtIdx ? tgtIdx : tgtIdx + 1);
+    arr.splice(Math.max(0, insertAt), 0, item);
+    saveDB();
+    renderPersoTab(who);
+    renderPersoSummary(who);
+    renderGlobalMetrics();
+  }
+}
+
 loadDB();
 
 </script>
