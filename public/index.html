@@ -698,6 +698,7 @@ async function loadDB(){
     const rows=await r.json();
     if(rows.length&&rows[0].data&&Object.keys(rows[0].data).length>0)db={...db,...rows[0].data};
   }catch(e){}
+  migrateCategories();
   if(currentProfile) {
     applyProfileUI();
   } else {
@@ -1391,6 +1392,35 @@ function reorderList(listType, srcEl, targetEl, pos) {
     renderPersoTab(who);
     renderPersoSummary(who);
     renderGlobalMetrics();
+  }
+}
+
+
+/* ── MIGRATION CATÉGORIES ── */
+const VOITURE_NAMES = ['crédit voiture','taxes roulage','assurance voiture','entretien voiture','essence','carburant','garage','parking','péage','vignette'];
+const NOURRITURE_NAMES = ['courses','alimentation','supermarché','épicerie','nourriture'];
+
+function migrateCategories() {
+  if(!db.fixed || !db.fixed.length) return;
+  let changed = false;
+  db.fixed = db.fixed.map(f => {
+    if(f.cat !== 'maison') return f; // déjà migré ou autre cat
+    const nameLower = f.name.toLowerCase();
+    // → voiture
+    if(VOITURE_NAMES.some(k => nameLower.includes(k))) {
+      changed = true;
+      return {...f, cat: 'voiture'};
+    }
+    // → nourriture
+    if(NOURRITURE_NAMES.some(k => nameLower.includes(k))) {
+      changed = true;
+      return {...f, cat: 'nourriture'};
+    }
+    return f;
+  });
+  if(changed) {
+    console.log('Migration catégories effectuée, sauvegarde...');
+    saveDB();
   }
 }
 
