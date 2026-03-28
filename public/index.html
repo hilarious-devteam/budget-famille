@@ -273,10 +273,88 @@ body{
   .pg{padding:20px 0;}
   .d-grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:20px;align-items:start;}
 }
+
+/* ── PROFILE SCREEN ── */
+#profile-screen {
+  position:fixed;inset:0;z-index:1000;
+  background:var(--bg);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:40px 24px calc(40px + var(--sb));
+}
+#profile-screen.hidden{display:none;}
+.profile-logo {
+  width:72px;height:72px;border-radius:20px;
+  background:linear-gradient(135deg,#007aff,#5e5ce6);
+  display:flex;align-items:center;justify-content:center;
+  font-size:34px;margin-bottom:28px;
+  box-shadow:0 8px 24px rgba(0,122,255,.35);
+}
+.profile-title{font-size:28px;font-weight:800;letter-spacing:-.5px;text-align:center;margin-bottom:8px;}
+.profile-sub{font-size:15px;color:var(--text3);text-align:center;margin-bottom:48px;}
+.profile-cards{display:flex;flex-direction:column;gap:12px;width:100%;max-width:320px;}
+.profile-card{
+  display:flex;align-items:center;gap:16px;
+  background:var(--card);border-radius:var(--r-xl);
+  padding:18px 20px;border:none;cursor:pointer;
+  text-align:left;width:100%;
+  box-shadow:0 2px 12px rgba(0,0,0,.06);
+  transition:transform .12s, box-shadow .12s;
+}
+.profile-card:active{transform:scale(.97);box-shadow:0 1px 4px rgba(0,0,0,.08);}
+.profile-avatar{
+  width:48px;height:48px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;font-weight:800;flex-shrink:0;
+}
+.profile-info{flex:1;}
+.profile-name{font-size:17px;font-weight:700;color:var(--text);margin-bottom:2px;}
+.profile-role{font-size:13px;color:var(--text3);}
+.profile-arrow{font-size:18px;color:var(--text3);}
+.profile-all{
+  margin-top:8px;
+  background:var(--fill);border-radius:var(--r-lg);
+  padding:14px 20px;border:none;cursor:pointer;
+  font-size:15px;font-weight:600;color:var(--text2);
+  width:100%;max-width:320px;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  transition:background .12s;
+}
+.profile-all:active{background:var(--fill2);}
+.profile-footer{margin-top:32px;font-size:12px;color:var(--text3);text-align:center;}
 </style>
 </head>
 <body>
-<div class="shell">
+
+<!-- PROFILE SCREEN -->
+<div id="profile-screen">
+  <div class="profile-logo">💰</div>
+  <div class="profile-title">Budget Famille</div>
+  <div class="profile-sub">Qui es-tu ?</div>
+  <div class="profile-cards">
+    <button class="profile-card" onclick="selectProfile('jerome')">
+      <div class="profile-avatar" style="background:#dbeafe;color:#1d4ed8">JL</div>
+      <div class="profile-info">
+        <div class="profile-name">Jérôme</div>
+        <div class="profile-role">Dépenses perso &amp; budget global</div>
+      </div>
+      <div class="profile-arrow">›</div>
+    </button>
+    <button class="profile-card" onclick="selectProfile('marie')">
+      <div class="profile-avatar" style="background:#fce7f3;color:#be185d">MD</div>
+      <div class="profile-info">
+        <div class="profile-name">Marie</div>
+        <div class="profile-role">Dépenses perso &amp; budget global</div>
+      </div>
+      <div class="profile-arrow">›</div>
+    </button>
+  </div>
+  <button class="profile-all" onclick="selectProfile('all')">
+    👁 Vue famille complète
+  </button>
+  <div class="profile-footer">Ton choix est mémorisé jusqu'à la fermeture du navigateur</div>
+</div>
+
+<div class="shell" id="main-shell" style="display:none">
 
 <!-- HEADER -->
 <div class="hdr">
@@ -555,6 +633,7 @@ async function loadDB(){
     if(rows.length&&rows[0].data&&Object.keys(rows[0].data).length>0)db={...db,...rows[0].data};
   }catch(e){}
   render();
+  if(currentProfile) applyProfileUI();
 }
 function saveDB(){
   document.getElementById('save-toast').style.display='block';
@@ -849,7 +928,71 @@ function render(){
   renderMonthLabel();renderGlobalMetrics();renderFixed();renderCatBars();renderRevList();renderPersoTab('jerome');renderPersoTab('marie');
   if(activeTab==='annuel')renderAnnual();else if(activeTab==='objectifs')renderObjectifs();else if(activeTab==='graphiques')renderGraphiques();
 }
+
+/* ── PROFILE LOGIC ── */
+let currentProfile = sessionStorage.getItem('bf-profile') || null;
+
+function selectProfile(who) {
+  currentProfile = who;
+  sessionStorage.setItem('bf-profile', who);
+  document.getElementById('profile-screen').classList.add('hidden');
+  document.getElementById('main-shell').style.display = '';
+  applyProfileUI();
+}
+
+function applyProfileUI() {
+  const p = currentProfile;
+  // Adapter les tabs selon le profil
+  const tabJ = document.querySelector('[onclick="goTab(\'jerome\',this)"]');
+  const tabM = document.querySelector('[onclick="goTab(\'marie\',this)"]');
+  // Mettre en avant l'onglet perso
+  if(p === 'jerome') {
+    tabJ.style.fontWeight = '700';
+    tabJ.style.color = '#1d4ed8';
+  } else if(p === 'marie') {
+    tabM.style.fontWeight = '700';
+    tabM.style.color = '#be185d';
+  }
+  // Mettre à jour le titre du header
+  if(p === 'jerome') document.querySelector('.brand h1').textContent = 'Jérôme';
+  else if(p === 'marie') document.querySelector('.brand h1').textContent = 'Marie';
+  else document.querySelector('.brand h1').textContent = 'Budget';
+  // Si profil perso, aller directement sur son onglet
+  if(p === 'jerome') {
+    const btn = document.querySelector('[onclick="goTab(\'jerome\',this)"]');
+    goTab('jerome', btn);
+  } else if(p === 'marie') {
+    const btn = document.querySelector('[onclick="goTab(\'marie\',this)"]');
+    goTab('marie', btn);
+  }
+}
+
+function showProfileScreen() {
+  sessionStorage.removeItem('bf-profile');
+  currentProfile = null;
+  document.getElementById('profile-screen').classList.remove('hidden');
+  document.getElementById('main-shell').style.display = 'none';
+}
+
+// Ajouter bouton "Changer de profil" dans le brand
+function addProfileSwitcher() {
+  const brand = document.querySelector('.brand');
+  const btn = document.createElement('button');
+  btn.style.cssText = 'background:none;border:none;cursor:pointer;font-size:11px;color:var(--text3);padding:2px 0;display:block;margin-top:1px;';
+  btn.textContent = '↩ changer';
+  btn.onclick = showProfileScreen;
+  brand.appendChild(btn);
+}
+
+
+// Init: vérifier si profil déjà choisi
+if(currentProfile) {
+  document.getElementById('profile-screen').classList.add('hidden');
+  document.getElementById('main-shell').style.display = '';
+}
+addProfileSwitcher();
 loadDB();
+
 </script>
 </body>
 </html>
