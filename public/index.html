@@ -731,7 +731,7 @@ const DEF_FIXED=[
 ];
 const DEF_REV=[
   {name:'Salaire Jérôme',amt:3400,who:'jerome'},{name:'Salaire Marie',amt:3050,who:'marie'},
-  {name:'Chèques repas Jérôme',amt:200,who:'jerome'},{name:'Chèques repas Marie',amt:100,who:'marie'},
+  {name:'Chèques repas Jérôme',amt:300,who:'jerome'},{name:'Chèques repas Marie',amt:100,who:'marie'},
   {name:'Allocations Famiwal',amt:332,who:'commun'},
 ];
 const DEF_GOALS=[
@@ -1208,12 +1208,9 @@ function calcAccounts() {
     if(nameLow.includes('belfius')) {
       belfiusItems.push(f);
     }
-    // Essence → séparé
-    else if(nameLow.includes('essence') || nameLow.includes('carburant')) {
-      essenceItems.push(f);
-    }
-    // Nourriture + Enfants + Couple → Belfius
-    else if(f.cat === 'nourriture' || f.cat === 'enfants' || f.cat === 'couple') {
+    // Nourriture + Enfants + Essence + Couple → Belfius
+    else if(f.cat === 'nourriture' || f.cat === 'enfants' || f.cat === 'couple'
+         || nameLow.includes('essence') || nameLow.includes('carburant')) {
       belfiusItems.push(f);
     }
     // Tout le reste : maison, voiture, autre → Crélan
@@ -1222,14 +1219,21 @@ function calcAccounts() {
     }
   });
 
-  const tCrelan  = crelanItems.reduce((s,f)=>s+Number(f.amt),0);
-  const tBelfius = belfiusItems.reduce((s,f)=>s+Number(f.amt),0);
-  const tEssence = essenceItems.reduce((s,f)=>s+Number(f.amt),0);
+  const tCrelan     = crelanItems.reduce((s,f)=>s+Number(f.amt),0);
+  const tBelfiusBrut = belfiusItems.reduce((s,f)=>s+Number(f.amt),0);
+  const tEssence    = essenceItems.reduce((s,f)=>s+Number(f.amt),0);
+
+  // Les chèques repas de Jérôme couvrent déjà une partie des courses → on les déduit du Belfius
+  const cheqRepasJ = db.revenus
+    .filter(r => r.who==='jerome' && r.name.toLowerCase().includes('repas'))
+    .reduce((s,r) => s+Number(r.amt), 0);
+  const tBelfius = Math.max(0, tBelfiusBrut - cheqRepasJ);
 
   return {
-    crelan:  { items:crelanItems,  total:tCrelan,  pJ:tCrelan*c.rJ,   pM:tCrelan*c.rM   },
-    belfius: { items:belfiusItems, total:tBelfius, pJ:tBelfius*c.rJ,  pM:tBelfius*c.rM  },
-    essence: { items:essenceItems, total:tEssence, pJ:tEssence*c.rJ,  pM:tEssence*c.rM  },
+    crelan:  { items:crelanItems,  total:tCrelan,    pJ:tCrelan*c.rJ,    pM:tCrelan*c.rM    },
+    belfius: { items:belfiusItems, total:tBelfius,   pJ:tBelfius*c.rJ,   pM:tBelfius*c.rM,
+               brut:tBelfiusBrut, cheqRepas:cheqRepasJ },
+    essence: { items:essenceItems, total:tEssence,   pJ:tEssence*c.rJ,   pM:tEssence*c.rM   },
     ratioJ: c.rJ, ratioM: c.rM
   };
 }
@@ -1296,7 +1300,7 @@ function renderAccounts() {
       <div class="account-icon" style="background:#fee2e2">🏦</div>
       <div>
         <div class="account-title">Compte Belfius</div>
-        <div class="account-total">Total mensuel : <strong>${fI(ac.belfius.total)}</strong></div>
+        <div class="account-total">Brut : ${fI(ac.belfius.brut)} − chèques repas ${fI(ac.belfius.cheqRepas)} = <strong>${fI(ac.belfius.total)}</strong></div>
       </div>
     </div>
     <div class="account-parts">
