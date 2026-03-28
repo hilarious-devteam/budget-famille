@@ -275,83 +275,111 @@ body{
 }
 
 /* ── PROFILE SCREEN ── */
-#profile-screen {
-  position:fixed;inset:0;z-index:1000;
-  background:var(--bg);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:40px 24px calc(40px + var(--sb));
+#profile-screen{
+  position:fixed;inset:0;z-index:1000;background:var(--bg);
+  overflow-y:auto;padding:calc(var(--st)+20px) 20px calc(40px + var(--sb));
+  display:flex;flex-direction:column;align-items:center;
 }
 #profile-screen.hidden{display:none;}
-.profile-logo {
-  width:72px;height:72px;border-radius:20px;
-  background:linear-gradient(135deg,#007aff,#5e5ce6);
+.ps-top{display:flex;flex-direction:column;align-items:center;margin-bottom:36px;margin-top:16px;}
+.ps-logo{
+  width:80px;height:80px;border-radius:24px;
+  background:linear-gradient(145deg,#007aff 0%,#5e5ce6 100%);
   display:flex;align-items:center;justify-content:center;
-  font-size:34px;margin-bottom:28px;
-  box-shadow:0 8px 24px rgba(0,122,255,.35);
+  font-size:38px;margin-bottom:20px;
+  box-shadow:0 8px 32px rgba(0,122,255,.3);
 }
-.profile-title{font-size:28px;font-weight:800;letter-spacing:-.5px;text-align:center;margin-bottom:8px;}
-.profile-sub{font-size:15px;color:var(--text3);text-align:center;margin-bottom:48px;}
-.profile-cards{display:flex;flex-direction:column;gap:12px;width:100%;max-width:320px;}
-.profile-card{
-  display:flex;align-items:center;gap:16px;
+.ps-title{font-size:30px;font-weight:800;letter-spacing:-.6px;text-align:center;}
+.ps-sub{font-size:15px;color:var(--text3);margin-top:6px;text-align:center;}
+.ps-section-label{
+  font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;
+  color:var(--text3);width:100%;max-width:360px;padding:0 4px 8px;
+}
+.ps-cards{display:flex;flex-direction:column;gap:10px;width:100%;max-width:360px;margin-bottom:8px;}
+.ps-card{
+  display:flex;align-items:center;justify-content:space-between;
   background:var(--card);border-radius:var(--r-xl);
-  padding:18px 20px;border:none;cursor:pointer;
-  text-align:left;width:100%;
-  box-shadow:0 2px 12px rgba(0,0,0,.06);
-  transition:transform .12s, box-shadow .12s;
+  padding:16px 18px;border:none;cursor:pointer;text-align:left;width:100%;
+  box-shadow:0 1px 8px rgba(0,0,0,.07);transition:transform .12s;
 }
-.profile-card:active{transform:scale(.97);box-shadow:0 1px 4px rgba(0,0,0,.08);}
-.profile-avatar{
-  width:48px;height:48px;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  font-size:18px;font-weight:800;flex-shrink:0;
+.ps-card:active{transform:scale(.97);}
+.ps-card-left{display:flex;align-items:center;gap:14px;}
+.ps-card-right{display:flex;align-items:center;gap:10px;}
+.ps-ava{width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:800;flex-shrink:0;}
+.ps-card-name{font-size:17px;font-weight:700;color:var(--text);margin-bottom:3px;}
+.ps-card-desc{font-size:12px;color:var(--text3);line-height:1.4;}
+.ps-card-badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;}
+.ps-badge-j{background:#dbeafe;color:#1d4ed8;}
+.ps-badge-m{background:#fce7f3;color:#be185d;}
+.ps-arrow{font-size:20px;color:var(--text3);flex-shrink:0;}
+.ps-divider{
+  display:flex;align-items:center;width:100%;max-width:360px;
+  gap:12px;margin:16px 0;color:var(--text3);font-size:13px;
 }
-.profile-info{flex:1;}
-.profile-name{font-size:17px;font-weight:700;color:var(--text);margin-bottom:2px;}
-.profile-role{font-size:13px;color:var(--text3);}
-.profile-arrow{font-size:18px;color:var(--text3);}
-.profile-all{
-  margin-top:8px;
-  background:var(--fill);border-radius:var(--r-lg);
-  padding:14px 20px;border:none;cursor:pointer;
-  font-size:15px;font-weight:600;color:var(--text2);
-  width:100%;max-width:320px;
-  display:flex;align-items:center;justify-content:center;gap:8px;
-  transition:background .12s;
+.ps-divider::before,.ps-divider::after{content:'';flex:1;height:0.5px;background:var(--sep);}
+.ps-family{
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--fill);border-radius:var(--r-xl);
+  padding:16px 18px;border:none;cursor:pointer;text-align:left;
+  width:100%;max-width:360px;transition:background .12s;margin-bottom:8px;
 }
-.profile-all:active{background:var(--fill2);}
-.profile-footer{margin-top:32px;font-size:12px;color:var(--text3);text-align:center;}
+.ps-family:active{background:var(--fill2);}
+.ps-family-left{display:flex;align-items:center;gap:14px;}
+.ps-family-icon{width:50px;height:50px;border-radius:50%;background:var(--fill2);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+.ps-footer{font-size:12px;color:var(--text3);text-align:center;margin-top:24px;max-width:280px;line-height:1.5;}
 </style>
 </head>
 <body>
 
 <!-- PROFILE SCREEN -->
 <div id="profile-screen">
-  <div class="profile-logo">💰</div>
-  <div class="profile-title">Budget Famille</div>
-  <div class="profile-sub">Qui es-tu ?</div>
-  <div class="profile-cards">
-    <button class="profile-card" onclick="selectProfile('jerome')">
-      <div class="profile-avatar" style="background:#dbeafe;color:#1d4ed8">JL</div>
-      <div class="profile-info">
-        <div class="profile-name">Jérôme</div>
-        <div class="profile-role">Dépenses perso &amp; budget global</div>
+  <div class="ps-top">
+    <div class="ps-logo">💰</div>
+    <div class="ps-title">Budget Famille</div>
+    <div class="ps-sub">Jérôme &amp; Marie</div>
+  </div>
+  <div class="ps-section-label">Connexion personnelle</div>
+  <div class="ps-cards">
+    <button class="ps-card" onclick="selectProfile('jerome')">
+      <div class="ps-card-left">
+        <div class="ps-ava" style="background:#dbeafe;color:#1d4ed8">JL</div>
+        <div>
+          <div class="ps-card-name">Jérôme</div>
+          <div class="ps-card-desc">Mes dépenses · ma contribution · mon solde</div>
+        </div>
       </div>
-      <div class="profile-arrow">›</div>
+      <div class="ps-card-right">
+        <div class="ps-card-badge ps-badge-j">Perso</div>
+        <div class="ps-arrow">›</div>
+      </div>
     </button>
-    <button class="profile-card" onclick="selectProfile('marie')">
-      <div class="profile-avatar" style="background:#fce7f3;color:#be185d">MD</div>
-      <div class="profile-info">
-        <div class="profile-name">Marie</div>
-        <div class="profile-role">Dépenses perso &amp; budget global</div>
+    <button class="ps-card" onclick="selectProfile('marie')">
+      <div class="ps-card-left">
+        <div class="ps-ava" style="background:#fce7f3;color:#be185d">MD</div>
+        <div>
+          <div class="ps-card-name">Marie</div>
+          <div class="ps-card-desc">Mes dépenses · ma contribution · mon solde</div>
+        </div>
       </div>
-      <div class="profile-arrow">›</div>
+      <div class="ps-card-right">
+        <div class="ps-card-badge ps-badge-m">Perso</div>
+        <div class="ps-arrow">›</div>
+      </div>
     </button>
   </div>
-  <button class="profile-all" onclick="selectProfile('all')">
-    👁 Vue famille complète
+  <div class="ps-divider"><span>ou</span></div>
+  <div class="ps-section-label">Vue complète</div>
+  <button class="ps-family" onclick="selectProfile('all')">
+    <div class="ps-family-left">
+      <div class="ps-family-icon">👨‍👩‍👧‍👦</div>
+      <div>
+        <div class="ps-card-name">Vue famille</div>
+        <div class="ps-card-desc">Budget global · charges · objectifs · stats</div>
+      </div>
+    </div>
+    <div class="ps-arrow">›</div>
   </button>
-  <div class="profile-footer">Ton choix est mémorisé jusqu'à la fermeture du navigateur</div>
+  <div class="ps-footer">Le choix est mémorisé pendant cette session</div>
 </div>
 
 <div class="shell" id="main-shell" style="display:none">
@@ -359,7 +387,10 @@ body{
 <!-- HEADER -->
 <div class="hdr">
   <div class="hdr-top">
-    <div class="brand"><h1>Budget</h1><p>Jérôme &amp; Marie</p></div>
+    <div class="brand" id="brand-area">
+      <h1 id="brand-name">Budget</h1>
+      <p id="brand-sub">Jérôme &amp; Marie</p>
+    </div>
     <div class="mnav" id="month-controls">
       <button class="mnav-btn" onclick="changeMonth(-1)">‹</button>
       <div class="mnav-lbl" id="month-lbl"></div>
@@ -371,14 +402,17 @@ body{
       <button class="mnav-btn" onclick="changeYear(1)">›</button>
     </div>
   </div>
-  <div class="seg">
-    <button class="seg-btn on" onclick="goTab('global',this)">Accueil</button>
-    <button class="seg-btn" onclick="goTab('jerome',this)">Jérôme</button>
-    <button class="seg-btn" onclick="goTab('marie',this)">Marie</button>
-    <button class="seg-btn" onclick="goTab('objectifs',this)">Objectifs</button>
-    <button class="seg-btn" onclick="goTab('annuel',this)">Annuel</button>
-    <button class="seg-btn" onclick="goTab('graphiques',this)">Stats</button>
-  </div>
+  <div class="seg" id="main-tabs"></div>
+</div>
+
+<!-- PAGE PERSO JEROME (profil jerome uniquement) -->
+<div id="tab-perso-j" class="pg">
+  <div id="pj-summary"></div>
+</div>
+
+<!-- PAGE PERSO MARIE (profil marie uniquement) -->
+<div id="tab-perso-m" class="pg">
+  <div id="pm-summary"></div>
 </div>
 
 <!-- ACCUEIL -->
@@ -632,8 +666,12 @@ async function loadDB(){
     const rows=await r.json();
     if(rows.length&&rows[0].data&&Object.keys(rows[0].data).length>0)db={...db,...rows[0].data};
   }catch(e){}
+  if(currentProfile) {
+    applyProfileUI();
+  } else {
+    buildTabs();
+  }
   render();
-  if(currentProfile) applyProfileUI();
 }
 function saveDB(){
   document.getElementById('save-toast').style.display='block';
@@ -673,11 +711,16 @@ function changeMonth(d){curM+=d;if(curM<0){curM=11;curY--;}if(curM>11){curM=0;cu
 function changeYear(d){viewYear+=d;renderAnnual();}
 function goTab(name,btn){
   activeTab=name;
-  document.querySelectorAll('.seg-btn').forEach(b=>b.classList.remove('on'));btn.classList.add('on');
-  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));document.getElementById('tab-'+name).classList.add('on');
-  document.getElementById('month-controls').style.display=name==='annuel'?'none':'flex';
-  document.getElementById('year-controls').style.display=name==='annuel'?'flex':'none';
-  if(name==='annuel')renderAnnual();else if(name==='objectifs')renderObjectifs();else if(name==='graphiques')renderGraphiques();
+  document.querySelectorAll('.seg-btn').forEach(b=>b.classList.remove('on'));
+  if(btn) btn.classList.add('on');
+  // Mapper les tabs perso vers les vraies pages
+  const realName = name==='perso-j'?'jerome':name==='perso-m'?'marie':name;
+  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
+  const el=document.getElementById('tab-'+realName);
+  if(el)el.classList.add('on');
+  document.getElementById('month-controls').style.display=realName==='annuel'?'none':'flex';
+  document.getElementById('year-controls').style.display=realName==='annuel'?'flex':'none';
+  if(realName==='annuel')renderAnnual();else if(realName==='objectifs')renderObjectifs();else if(realName==='graphiques')renderGraphiques();
 }
 function dc(id){if(CH[id]){CH[id].destroy();delete CH[id]}}
 
@@ -924,13 +967,168 @@ function addGoal(cat){
 function delGoal(id){db.goals=db.goals.filter(g=>g.id!==id);saveDB();renderObjectifs();}
 function editGoalSaved(id,val){const g=db.goals.find(x=>x.id===id);if(g){g.saved=parseFloat(val)||0;saveDB();renderObjectifs();}}
 
+
+function renderPersoSummary(who) {
+  const pfx = who === 'jerome' ? 'pj' : 'pm';
+  const c = contribs();
+  const k = cKey();
+  const spent = pT(who, k);
+  const dispo = who === 'jerome' ? c.dJ : c.dM;
+  const reste = dispo - spent;
+  const arr = gP(who, k);
+  const total = arr.reduce((s,x) => s+Number(x.amt), 0);
+  const pct = Math.min(100, dispo>0 ? (spent/dispo*100) : 0);
+  const [col,bg,txt] = reste>400 ? ['var(--green)','var(--green-t)','var(--green)'] :
+                        reste>0  ? ['var(--amber)','var(--amber-t)','var(--amber)'] :
+                                   ['var(--red)','var(--red-t)','var(--red)'];
+  const isJ = who === 'jerome';
+  const avaStyle = isJ ? 'background:#dbeafe;color:#1d4ed8' : 'background:#fce7f3;color:#be185d';
+  const avaText = isJ ? 'JL' : 'MD';
+  const name = isJ ? 'Jérôme' : 'Marie';
+
+  const catT = {};
+  arr.forEach(x => { catT[x.cat] = (catT[x.cat]||0) + Number(x.amt); });
+  const topCat = Object.entries(catT).sort((a,b)=>b[1]-a[1])[0];
+
+  document.getElementById(pfx+'-summary').innerHTML = `
+    <!-- En-tête profil -->
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
+      <div class="ps-ava" style="${avaStyle};width:52px;height:52px;font-size:18px">${avaText}</div>
+      <div>
+        <div style="font-size:22px;font-weight:800;letter-spacing:-.4px">${name}</div>
+        <div style="font-size:13px;color:var(--text3)">${MF[curM]} ${curY}</div>
+      </div>
+    </div>
+
+    <!-- Solde dispo -->
+    <div class="dispo" style="background:${bg};margin-bottom:16px">
+      <div class="dispo-grid">
+        <div>
+          <div class="dispo-lbl" style="color:${txt}">Disponible ce mois</div>
+          <div class="dispo-big" style="color:${txt}">${fI(dispo)}</div>
+          <div style="font-size:12px;color:${txt};opacity:.7;margin-top:4px">après part charges communes</div>
+        </div>
+        <div class="dispo-rside">
+          <div class="dispo-slbl" style="color:${txt}">Dépensé</div>
+          <div class="dispo-spent" style="color:${txt}">${fI(spent)}</div>
+          <div class="dispo-reste" style="color:${col}">Reste : ${fI(reste)}</div>
+        </div>
+      </div>
+      <div class="dbar" style="background:${col}22"><div class="dbar-fill" style="width:${pct.toFixed(1)}%;background:${col}"></div></div>
+      <div class="dispo-foot" style="color:${txt}">
+        <span>${pct.toFixed(0)}% utilisé</span>
+        <span>Salaire : ${fI(who==='jerome'?c.sJT:c.sMT)} — fixes : ${fI(who==='jerome'?c.pJ:c.pM)}</span>
+      </div>
+    </div>
+
+    <!-- Métriques rapides -->
+    <div class="mg" style="margin-bottom:16px">
+      <div class="mc"><div class="mc-accent" style="background:${total<dispo?'var(--green)':'var(--red)'}"></div><div class="mc-lbl">Dépensé</div><div class="mc-val ${total<dispo?'c-ok':'c-ko'}">${fI(total)}</div></div>
+      <div class="mc"><div class="mc-lbl">Postes</div><div class="mc-val">${arr.length}</div></div>
+      <div class="mc"><div class="mc-accent" style="background:${pct<80?'var(--green)':'var(--amber)'}"></div><div class="mc-lbl">% du dispo</div><div class="mc-val ${pct<80?'c-ok':'c-wa'}">${Math.round(pct)}%</div></div>
+      <div class="mc"><div class="mc-lbl">Top catégorie</div><div class="mc-val" style="font-size:14px">${topCat?CLAB[topCat[0]]:'—'}</div></div>
+    </div>
+
+    <!-- Dépenses -->
+    <div class="sec-label">Mes dépenses</div>
+    <div class="lcard">
+      <div id="${pfx}-list">
+        ${arr.length
+          ? arr.map((x,i) => `
+            <div class="lrow">
+              <div class="lrow-icon" style="background:${CCAT[x.cat]||'#888'}22">${CICON[x.cat]||'📌'}</div>
+              <div class="lrow-main"><div class="lrow-name">${x.desc}</div><div class="lrow-sub">${CLAB[x.cat]||x.cat}</div></div>
+              <div class="lrow-right"><div class="lrow-val">${fmt(x.amt)}</div><button class="del-btn" onclick="delPerso('${who}',${i})">✕</button></div>
+            </div>`).join('')
+            + `<div class="lrow" style="background:var(--fill2)"><div class="lrow-main"><div class="lrow-name" style="font-weight:700">Total</div></div><div class="lrow-right"><div class="lrow-val" style="font-weight:700">${fmt(total)}</div></div></div>`
+          : '<div class="lrow"><div class="lrow-main" style="text-align:center;padding:8px 0;color:var(--text3)">Aucune dépense ce mois-ci</div></div>'
+        }
+      </div>
+      <div class="addform">
+        <input type="text" id="${pfx}-desc" placeholder="Description…">
+        <div class="addform-row">
+          <input type="number" id="${pfx}-amt" placeholder="€" min="0" step="0.01">
+          <select id="${pfx}-cat">
+            <option value="perso">👤 Personnel</option>
+            <option value="transport">🚗 Transport</option>
+            <option value="resto">🍽️ Resto</option>
+            <option value="sport">⚽ Sport</option>
+            <option value="vetements">👕 Vêtements</option>
+            <option value="sante">💊 Santé</option>
+            <option value="autre">📌 Autre</option>
+          </select>
+        </div>
+        <button class="addbtn" onclick="addPersoSummary('${who}','${pfx}')">Ajouter</button>
+      </div>
+    </div>
+
+    <!-- Ma contribution aux charges communes -->
+    <div class="sec-label" style="margin-top:8px">Ma contribution au budget commun</div>
+    <div class="lcard">
+      <div class="lrow">
+        <div class="lrow-main"><div class="lrow-name">Charges fixes totales</div></div>
+        <div class="lrow-right"><div class="lrow-val">${fI(tFix())}</div></div>
+      </div>
+      <div class="lrow" style="background:var(--fill2)">
+        <div class="lrow-main"><div class="lrow-name" style="font-weight:700">Ma part (${((who==='jerome'?c.rJ:c.rM)*100).toFixed(0)}%)</div><div class="lrow-sub">basé sur mon salaire</div></div>
+        <div class="lrow-right"><div class="lrow-val" style="color:var(--red)">−${fI(who==='jerome'?c.pJ:c.pM)}</div></div>
+      </div>
+      <div class="lrow">
+        <div class="lrow-main"><div class="lrow-name">Solde mensuel net</div><div class="lrow-sub">après charges + dépenses perso</div></div>
+        <div class="lrow-right"><div class="lrow-val" style="color:${reste-spent>=0?'var(--green)':'var(--red)'};font-weight:700">${fI(reste)}</div></div>
+      </div>
+    </div>
+  `;
+}
+
+function addPersoSummary(who, pfx) {
+  const desc = document.getElementById(pfx+'-desc').value.trim();
+  const amt  = parseFloat(document.getElementById(pfx+'-amt').value)||0;
+  const cat  = document.getElementById(pfx+'-cat').value;
+  if(!desc||amt<=0) return;
+  const k = cKey();
+  if(!db.personal[who]) db.personal[who]={};
+  if(!db.personal[who][k]) db.personal[who][k]=[];
+  db.personal[who][k].push({desc,amt,cat});
+  document.getElementById(pfx+'-desc').value='';
+  document.getElementById(pfx+'-amt').value='';
+  saveDB();
+  renderPersoSummary(who);
+  renderGlobalMetrics();
+}
+
 function render(){
   renderMonthLabel();renderGlobalMetrics();renderFixed();renderCatBars();renderRevList();renderPersoTab('jerome');renderPersoTab('marie');
+  renderPersoSummary('jerome');renderPersoSummary('marie');
   if(activeTab==='annuel')renderAnnual();else if(activeTab==='objectifs')renderObjectifs();else if(activeTab==='graphiques')renderGraphiques();
 }
 
 /* ── PROFILE LOGIC ── */
 let currentProfile = sessionStorage.getItem('bf-profile') || null;
+
+// Définition des tabs par profil
+const TABS = {
+  jerome: [
+    {id:'perso-j', label:'Mes dépenses'},
+    {id:'global',  label:'Budget commun'},
+    {id:'objectifs',label:'Objectifs'},
+    {id:'annuel',  label:'Annuel'},
+  ],
+  marie: [
+    {id:'perso-m', label:'Mes dépenses'},
+    {id:'global',  label:'Budget commun'},
+    {id:'objectifs',label:'Objectifs'},
+    {id:'annuel',  label:'Annuel'},
+  ],
+  all: [
+    {id:'global',   label:'Accueil'},
+    {id:'jerome',   label:'Jérôme'},
+    {id:'marie',    label:'Marie'},
+    {id:'objectifs',label:'Objectifs'},
+    {id:'annuel',   label:'Annuel'},
+    {id:'graphiques',label:'Stats'},
+  ]
+};
 
 function selectProfile(who) {
   currentProfile = who;
@@ -940,33 +1138,6 @@ function selectProfile(who) {
   applyProfileUI();
 }
 
-function applyProfileUI() {
-  const p = currentProfile;
-  // Adapter les tabs selon le profil
-  const tabJ = document.querySelector('[onclick="goTab(\'jerome\',this)"]');
-  const tabM = document.querySelector('[onclick="goTab(\'marie\',this)"]');
-  // Mettre en avant l'onglet perso
-  if(p === 'jerome') {
-    tabJ.style.fontWeight = '700';
-    tabJ.style.color = '#1d4ed8';
-  } else if(p === 'marie') {
-    tabM.style.fontWeight = '700';
-    tabM.style.color = '#be185d';
-  }
-  // Mettre à jour le titre du header
-  if(p === 'jerome') document.querySelector('.brand h1').textContent = 'Jérôme';
-  else if(p === 'marie') document.querySelector('.brand h1').textContent = 'Marie';
-  else document.querySelector('.brand h1').textContent = 'Budget';
-  // Si profil perso, aller directement sur son onglet
-  if(p === 'jerome') {
-    const btn = document.querySelector('[onclick="goTab(\'jerome\',this)"]');
-    goTab('jerome', btn);
-  } else if(p === 'marie') {
-    const btn = document.querySelector('[onclick="goTab(\'marie\',this)"]');
-    goTab('marie', btn);
-  }
-}
-
 function showProfileScreen() {
   sessionStorage.removeItem('bf-profile');
   currentProfile = null;
@@ -974,14 +1145,77 @@ function showProfileScreen() {
   document.getElementById('main-shell').style.display = 'none';
 }
 
-// Ajouter bouton "Changer de profil" dans le brand
+function buildTabs() {
+  const p = currentProfile || 'all';
+  const tabs = TABS[p] || TABS.all;
+  const container = document.getElementById('main-tabs');
+  container.innerHTML = tabs.map((t,i) =>
+    `<button class="seg-btn${i===0?' on':''}" data-tab="${t.id}" onclick="goTab('${t.id}',this)">${t.label}</button>`
+  ).join('');
+}
+
+function applyProfileUI() {
+  const p = currentProfile;
+
+  // Header brand
+  if(p === 'jerome') {
+    document.getElementById('brand-name').textContent = 'Jérôme';
+    document.getElementById('brand-sub').textContent = 'Mon budget';
+  } else if(p === 'marie') {
+    document.getElementById('brand-name').textContent = 'Marie';
+    document.getElementById('brand-sub').textContent = 'Mon budget';
+  } else {
+    document.getElementById('brand-name').textContent = 'Budget';
+    document.getElementById('brand-sub').textContent = 'Jérôme & Marie';
+  }
+
+  // Bouton switcher
+  let sw = document.getElementById('profile-switcher');
+  if(!sw) {
+    sw = document.createElement('button');
+    sw.id = 'profile-switcher';
+    sw.style.cssText = 'background:none;border:none;cursor:pointer;font-size:11px;color:var(--blue);padding:2px 0;display:block;margin-top:1px;font-weight:500;';
+    sw.onclick = showProfileScreen;
+    document.getElementById('brand-area').appendChild(sw);
+  }
+  sw.textContent = p==='all' ? '⇄ changer de profil' : '⇄ changer';
+
+  // Construire les tabs
+  buildTabs();
+
+  // Naviguer vers le premier tab du profil
+  activeTab = TABS[p||'all'][0].id;
+  document.querySelectorAll('.pg').forEach(el=>el.classList.remove('on'));
+
+  // Pour les profils perso, on affiche un onglet dédié "perso-j/m"
+  // qui mappe sur l'onglet jerome/marie existant
+  const firstTab = TABS[p||'all'][0].id;
+  const realTab = firstTab === 'perso-j' ? 'jerome' : firstTab === 'perso-m' ? 'marie' : firstTab;
+  const pageEl = document.getElementById('tab-'+realTab);
+  if(pageEl) pageEl.classList.add('on');
+
+  // Visibilité du nav mois/année
+  document.getElementById('month-controls').style.display = (realTab==='annuel')?'none':'flex';
+  document.getElementById('year-controls').style.display = (realTab==='annuel')?'flex':'none';
+
+  // Render
+  if(realTab==='annuel') renderAnnual();
+  else if(realTab==='objectifs') renderObjectifs();
+  else if(realTab==='graphiques') renderGraphiques();
+
+  // Dans les profils perso, masquer les blocs de l'autre personne
+  applyPrivacy();
+}
+
+function applyPrivacy() {
+  const p = currentProfile;
+  // Dans la page "global", masquer certains éléments si profil perso
+  // (les charges fixes sont communes et visibles pour tous)
+  // La confidentialité porte sur les dépenses perso de l'autre
+}
+
 function addProfileSwitcher() {
-  const brand = document.querySelector('.brand');
-  const btn = document.createElement('button');
-  btn.style.cssText = 'background:none;border:none;cursor:pointer;font-size:11px;color:var(--text3);padding:2px 0;display:block;margin-top:1px;';
-  btn.textContent = '↩ changer';
-  btn.onclick = showProfileScreen;
-  brand.appendChild(btn);
+  // Déjà géré dans applyProfileUI
 }
 
 
@@ -989,8 +1223,10 @@ function addProfileSwitcher() {
 if(currentProfile) {
   document.getElementById('profile-screen').classList.add('hidden');
   document.getElementById('main-shell').style.display = '';
+} else {
+  // Afficher l'écran profil — ne pas construire les tabs encore
+  buildTabs(); // tabs par défaut pour "all"
 }
-addProfileSwitcher();
 loadDB();
 
 </script>
